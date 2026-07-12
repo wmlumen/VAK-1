@@ -257,26 +257,39 @@ canvas { max-width: 100%; }
 }
 
 .lang-selector {
-    position: absolute;
-    top: 75px;
-    left: 20px;
-    z-index: 100;
-}
-.lang-selector select {
-    background: rgba(255,255,255,0.1);
-    color: var(--text-primary);
-    border: 1px solid var(--card-border);
-    padding: 5px 10px;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 8px 12px;
     border-radius: 20px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.8rem;
-    outline: none;
-    cursor: pointer;
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
 }
-.lang-selector select option {
-    background: #1e293b;
-    color: #fff;
+
+.flag-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.flag-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.flag-btn.active {
+    opacity: 1;
+    border-color: var(--accent);
+    transform: scale(1.1);
 }
 
 /* --- IMPRESIÓN --- */

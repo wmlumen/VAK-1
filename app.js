@@ -9,9 +9,12 @@ let currentLang = 'es';
 // Constante en la nube para persistencia global
 const CLOUD_API_URL = "https://jsonblob.com/api/jsonBlob/019f56c1-ff28-78c0-96e4-7b245e1c6524";
 
-// --- i18n & API de Países ---
-document.getElementById('lang-select').addEventListener('change', (e) => {
-    setLanguage(e.target.value);
+document.querySelectorAll('.flag-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        setLanguage(e.target.getAttribute('data-lang'));
+    });
 });
 
 function setLanguage(lang) {

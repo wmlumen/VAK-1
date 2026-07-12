@@ -8,16 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <!-- Language Selector -->
+    <!-- Language Selector (Visual Flags) -->
     <div class="lang-selector">
-        <select id="lang-select">
-            <option value="es">🇪🇸 Español</option>
-            <option value="en">🇬🇧 English</option>
-            <option value="pt">🇧🇷 Português</option>
-            <option value="zh">🇨🇳 中文 (Mandarin)</option>
-            <option value="ru">🇷🇺 Русский</option>
-            <option value="gn">🇵🇾 Avañe'ẽ (Guaraní)</option>
-        </select>
+        <img src="https://flagcdn.com/w40/es.png" alt="Español" class="flag-btn active" data-lang="es" title="Español">
+        <img src="https://flagcdn.com/w40/gb.png" alt="English" class="flag-btn" data-lang="en" title="English">
+        <img src="https://flagcdn.com/w40/br.png" alt="Português" class="flag-btn" data-lang="pt" title="Português">
+        <img src="https://flagcdn.com/w40/cn.png" alt="中文" class="flag-btn" data-lang="zh" title="中文">
+        <img src="https://flagcdn.com/w40/ru.png" alt="Русский" class="flag-btn" data-lang="ru" title="Русский">
+        <img src="https://flagcdn.com/w40/py.png" alt="Guaraní" class="flag-btn" data-lang="gn" title="Guaraní">
     </div>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -38,7 +36,7 @@
         <ul>
             <li><button class="tab-btn active" data-tab="tab-test" data-i18n="tabTest">📝 Realizar Test</button></li>
             <li><button class="tab-btn" data-tab="tab-stats" data-i18n="tabStats">📊 Estadísticas de Grupo</button></li>
-            <li><button class="tab-btn" data-tab="tab-link">🔗 Enlace Docente</button></li>
+            <li><button class="tab-btn" data-tab="tab-link" data-i18n="tabLink">🔗 Compartir</button></li>
             <li><button class="tab-btn" data-tab="tab-comments" data-i18n="tabComments">💬 Comentarios</button></li>
         </ul>
     </nav>
@@ -225,10 +223,10 @@
         </div>
 
         <!-- ============================================== -->
-        <!-- PESTAÑA 3: ENLACE DOCENTE                      -->
+        <!-- PESTAÑA 3: COMPARTIR (DOCENTE LINK)            -->
         <!-- ============================================== -->
         <div id="tab-link" class="tab-content hidden">
-            <h1>Generador de Enlaces</h1>
+            <h1 data-i18n="shareTitle">Generador de Enlaces</h1>
             <p class="description" style="text-align: center;">Crea un enlace mágico para tus alumnos. El formulario se acortará automáticamente.</p>
             
             <div class="form-group">
