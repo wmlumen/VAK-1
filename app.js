@@ -58,10 +58,6 @@ async function loadCountries() {
                 opt.innerText = c.name.common; 
                 select.appendChild(opt);
             });
-            
-            // Clone for link generator
-            document.getElementById('link-country-select').innerHTML = '<option value="">(Autodetectar por IP)</option>' + select.innerHTML;
-            
             countriesLoaded = true;
         }
     } catch (e) {
@@ -78,7 +74,17 @@ async function loadCountries() {
         });
     }
 
-    // Auto-detectar país por IP y seleccionarlo
+    // Populate link-country-select (Teacher generator) by cloning the options from user-country
+    const linkSelect = document.getElementById('link-country-select');
+    linkSelect.innerHTML = '<option value="">(Dejar en blanco para Autodetectar por IP)</option>';
+    for (let i = 1; i < select.options.length; i++) { // Skip index 0 ("Cargando países")
+        const opt = document.createElement('option');
+        opt.value = select.options[i].value;
+        opt.innerText = select.options[i].innerText;
+        linkSelect.appendChild(opt);
+    }
+
+    // Auto-detectar país por IP y seleccionarlo en el formulario principal
     try {
         const ipRes = await fetch('https://ipapi.co/json/');
         const ipData = await ipRes.json();
