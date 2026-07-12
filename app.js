@@ -100,11 +100,6 @@ async function loadCountries() {
 // Inicializar idioma y países
 setLanguage('es');
 loadCountries();
-// --- HAMBURGER MENU ---
-document.getElementById('hamburger-btn').addEventListener('click', () => {
-    document.getElementById('mobile-nav').classList.toggle('open');
-});
-
 // --- NAVEGACIÓN TABS ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
