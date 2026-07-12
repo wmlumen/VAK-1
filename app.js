@@ -161,11 +161,35 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // --- LÓGICA DEL GENERADOR DE ENLACES (DOCENTES) ---
-document.getElementById('generate-link-btn').addEventListener('click', () => {
+document.getElementById('generate-link-btn').addEventListener('click', async () => {
     const group = document.getElementById('link-group').value.trim().toUpperCase();
     const country = document.getElementById('link-country-select').value;
     
     if (!group) return alert("Por favor ingresa un código de grupo.");
+    
+    const regex = /^[A-Z]{3}[0-9]{3}$/;
+    if (!regex.test(group)) {
+        return alert("El código debe tener exactamente 3 letras y 3 números (Ej. MAT123).");
+    }
+
+    document.getElementById('generate-link-btn').innerText = "Validando...";
+    
+    // Verificar si el grupo ya existe
+    try {
+        const db = await getDB();
+        const existingGroups = [...new Set(db.map(item => item.group))];
+        if (existingGroups.includes(group)) {
+            const confirmAdd = confirm("⚠️ ATENCIÓN: Ya existen resultados guardados bajo el grupo '" + group + "'.\n\nSi creas este enlace, los nuevos alumnos se sumarán al grupo existente.\n\n¿Deseas continuar?");
+            if (!confirmAdd) {
+                document.getElementById('generate-link-btn').innerText = "Generar Enlace Seguro";
+                return;
+            }
+        }
+    } catch (e) {
+        console.error("No se pudo validar el grupo, procediendo de todos modos.");
+    }
+    
+    document.getElementById('generate-link-btn').innerText = "Generar Enlace Seguro";
     
     let url = window.location.origin + window.location.pathname + "?group=" + encodeURIComponent(group);
     if (country) url += "&country=" + encodeURIComponent(country);
