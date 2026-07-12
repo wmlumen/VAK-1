@@ -12,6 +12,9 @@ const DB_KEY = 'vak_results';
 const COMMENTS_KEY = 'vak_comments';
 const CONSENT_KEY = 'vak_consent';
 
+// Si definís esta URL, los resultados también se guardan en Google Sheets (Web App de Apps Script).
+const GOOGLE_SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwvCWJWVZdu1uGhjVcQvxVECBIh1OXqsSNJfU5KAybvGrVOPKTqMymbOxJJLyTd6FA0/exec';
+
 document.addEventListener('DOMContentLoaded', async () => {
     let langToSet = localStorage.getItem('vak_lang');
     if (!langToSet) {
@@ -353,11 +356,26 @@ function showScreen(screenName) {
     screens[screenName].classList.add('active');
 }
 
+function updateQR() {
+    const img = document.getElementById('qr-img');
+    if (!img) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('qr', 'vak');
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url.toString())}`;
+}
+
 // Wizard en 2 pasos para onboarding
 function initWizard() {
     const params = new URLSearchParams(window.location.search);
     const groupParam = params.get('group');
     const countryParam = params.get('country');
+
+    const groupInput = document.getElementById('user-group');
+    if (groupInput) {
+        groupInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 6);
+        });
+    }
 
     if (groupParam) {
         document.getElementById('user-group').value = groupParam.toUpperCase();
@@ -373,6 +391,25 @@ function initWizard() {
         if (checkbox) checkbox.checked = true;
         updateContinueBtn();
     }
+
+    updateQR();
+    document.getElementById('qr-img')?.addEventListener('click', () => {
+        const overlay = document.createElement('div');
+        overlay.id = 'qr-overlay';
+        overlay.style.cssText = 'position: fixed; inset: 0; z-index: 10001; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.88); backdrop-filter: blur(4px);';
+        overlay.innerHTML = `
+            <div style="position: relative;">
+                <button id="qr-close" style="position: absolute; top: -14px; right: -14px; background: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); line-height: 1;">×</button>
+                <img src="${document.getElementById('qr-img')?.src || ''}" style="width: min(85vw, 420px); height: auto; border-radius: 20px; background: white; padding: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
+                <div style="text-align:center; color: white; margin-top: 12px; font-size: 0.9rem; opacity: 0.9;">Escanea para abrir el test en tu celular</div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const close = () => overlay.remove();
+        document.getElementById('qr-close')?.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        document.addEventListener('keydown', function escHandler(ev) { if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', escHandler); } });
+    });
 }
 
 function advanceToStep2(groupVal, countryVal) {
@@ -380,9 +417,23 @@ function advanceToStep2(groupVal, countryVal) {
     const step2 = document.getElementById('wizard-step-2');
     const summaryTag = document.getElementById('step-1-summary');
     const intro = document.getElementById('welcome-intro');
+    const countrySelect = document.getElementById('user-country');
+
+    const effectiveCountry = countryVal && countrySelect?.querySelector(`option[value="${countryVal}"]`)
+        ? countryVal
+        : (countrySelect?.value || '');
+
+    if (!effectiveCountry) {
+        const err = document.getElementById('country-error');
+        if (err) err.classList.remove('hidden');
+        countrySelect?.focus();
+        return;
+    }
+    const cErr = document.getElementById('country-error');
+    if (cErr) cErr.classList.add('hidden');
 
     if (step1) step1.classList.add('hidden-step');
-    if (summaryTag) summaryTag.innerText = `✅ ${groupVal} – ${countryVal}`;
+    if (summaryTag) summaryTag.innerText = `✅ ${groupVal} – ${effectiveCountry}`;
     if (step2) step2.classList.remove('hidden-step');
     if (intro) intro.style.display = 'none';
 
@@ -393,9 +444,12 @@ function advanceToStep2(groupVal, countryVal) {
 
 document.getElementById('step-1-btn')?.addEventListener('click', () => {
     const groupVal = document.getElementById('user-group').value.trim().toUpperCase();
-    const countryVal = document.getElementById('user-country').value || "No especificado";
+    const countrySelect = document.getElementById('user-country');
+    const countryVal = countrySelect ? countrySelect.value : '';
     const errorMsg = document.getElementById('group-error');
-    const regex = /^[a-zA-Z]{3}[0-9]{3}$/;
+    const countryMsg = document.getElementById('country-error');
+
+    const regex = /^([A-Z]{3}[0-9]{3}|[A-Z][0-9][A-Z][0-9][A-Z][0-9])$/;
 
     if (!regex.test(groupVal)) {
         errorMsg.classList.remove('hidden');
@@ -403,10 +457,28 @@ document.getElementById('step-1-btn')?.addEventListener('click', () => {
         return;
     }
     errorMsg.classList.add('hidden');
+
+    if (!countryVal) {
+        if (countryMsg) countryMsg.classList.remove('hidden');
+        countrySelect?.focus();
+        return;
+    }
+    if (countryMsg) countryMsg.classList.add('hidden');
+
     advanceToStep2(groupVal, countryVal);
 });
 
 document.getElementById('step-2-back')?.addEventListener('click', () => {
+    const step1 = document.getElementById('wizard-step-1');
+    const step2 = document.getElementById('wizard-step-2');
+    const summary = document.getElementById('step-1-summary');
+    const intro = document.getElementById('welcome-intro');
+
+    if (step2) step2.classList.add('hidden-step');
+    if (step1) step1.classList.remove('hidden-step');
+    if (summary) summary.innerText = '';
+    if (intro) intro.style.display = '';
+
     document.getElementById('user-group')?.focus();
 });
 
@@ -652,8 +724,7 @@ function getAllResults() {
 }
 
 function saveResultToDB(name, group, gender, age, country, v, a, k, dominantKey, questionVersion) {
-    const results = getAllResults();
-    results.push({
+    const record = {
         id: generateId(),
         name,
         group,
@@ -664,8 +735,31 @@ function saveResultToDB(name, group, gender, age, country, v, a, k, dominantKey,
         dominantKey,
         questionVersion,
         createdAt: new Date().toISOString()
-    });
+    };
+
+    // Capa 1: persistencia local (siempre)
+    const results = getAllResults();
+    results.push(record);
     localStorage.setItem(DB_KEY, JSON.stringify(results));
+
+    // Capa 2: remota opcional (no bloquea la app si falla)
+    persistToSheet(record);
+}
+
+async function persistToSheet(record) {
+    const endpoint = typeof GOOGLE_SHEET_WEBAPP_URL === 'string' ? GOOGLE_SHEET_WEBAPP_URL.trim() : '';
+    if (!endpoint) return;
+
+    try {
+        await fetch(endpoint, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(record)
+        });
+    } catch (e) {
+        console.warn('No se pudo guardar en Sheets, se mantiene el dato local.', e);
+    }
 }
 
 function exportData() {

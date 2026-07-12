@@ -73,14 +73,15 @@
                             <div class="form-row" style="margin-top: 15px;">
                                 <div class="form-group half">
                                     <label for="user-group" data-i18n="labelGroup">Código de grupo (ej.: AAA111)</label>
-                                    <input type="text" id="user-group" class="glass-input" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
-                                    <small id="group-error" class="error-msg hidden">Formato inválido: 3 letras y 3 números.</small>
+                                    <input type="text" id="user-group" class="glass-input" placeholder="Ej. MAT123 o A2B3C5" maxlength="6" style="text-transform: uppercase;">
+                                    <small id="group-error" class="error-msg hidden">Formato inválido: 3 letras y 3 números, por ejemplo AAA111 o A2B3C5.</small>
                                 </div>
                                 <div class="form-group half">
                                     <label for="user-country" data-i18n="labelCountry">País</label>
                                     <select id="user-country" class="glass-input select-with-arrow">
                                         <option value="" disabled selected data-i18n="selectCountryDef">-- Elige tu país --</option>
                                     </select>
+                                    <small id="country-error" class="error-msg hidden">Selecciona un país para continuar.</small>
                                 </div>
                             </div>
                             <button id="step-1-btn" class="btn primary-btn" style="width: 100%; margin-top: 10px;">Siguiente paso →</button>
@@ -95,8 +96,8 @@
                             </div>
                             
                             <div class="form-group" style="margin-top: 15px;">
-                                <label for="user-name" data-i18n="labelName">Nombre y apellido</label>
-                                <input type="text" id="user-name" class="glass-input" placeholder="Ej. Ana Pérez">
+                                <label for="user-name" data-i18n="labelName">Siglas / ID</label>
+                                <input type="text" id="user-name" class="glass-input" placeholder="Ej. A.Pérez o AP01" maxlength="12">
                             </div>
 
                             <div class="form-row">

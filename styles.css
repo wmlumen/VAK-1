@@ -392,6 +392,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 /* Pantallas muy pequeñas */
 @media (max-width: 400px) {
     .app-container { width: 100%; padding: 18px; border-radius: 16px; }
+    /* Asegura que el QR compacto sea cliqueable en móvil */
+    .qr-compact-card img, #qr-img { min-width: 44px; min-height: 44px; }
+}
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.1rem; }
     .btn { padding: 10px 16px; font-size: 0.95rem; }
