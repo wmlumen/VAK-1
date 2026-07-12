@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VAK & Dashboard</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- HTML2Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navegación de Pestañas -->
+    <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-test">📝 Realizar Test</button>
+        <button class="tab-btn" data-tab="tab-stats">📊 Estadísticas de Grupo</button>
+        <button class="tab-btn" data-tab="tab-comments">💬 Comentarios</button>
+    </nav>
+
+    <main class="app-container glass">
+        
+        <!-- ============================================== -->
+        <!-- PESTAÑA 1: REALIZAR TEST                       -->
+        <!-- ============================================== -->
+        <div id="tab-test" class="tab-content active">
+            
+            <!-- Pantalla 1: Formulario de Ingreso -->
+            <section id="welcome-screen" class="screen active">
+                <h1>Test VAK</h1>
+                <p class="description" style="text-align: center;">
+                    Identifica tu estilo de aprendizaje predominante. <br>
+                    Por favor, ingresa tus datos para comenzar.
+                </p>
+                <div class="form-group">
+                    <label for="user-name">Tu Nombre:</label>
+                    <input type="text" id="user-name" placeholder="Ej. Ana Pérez">
+                </div>
+                <div class="form-group">
+                    <label for="user-group">Código de Grupo (3 Letras + 3 Números):</label>
+                    <input type="text" id="user-group" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
+                    <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
+                </div>
+                <div class="form-group">
+                    <label for="user-gender">Género:</label>
+                    <select id="user-gender" class="glass-input">
+                        <option value="">-- Selecciona --</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <button id="continue-btn" class="btn primary-btn" style="margin-top: 15px;">Continuar</button>
+            </section>
+
+            <!-- Pantalla 2: Selección de Edad -->
+            <section id="start-screen" class="screen hidden">
+                <h2>¡Hola, <span id="display-name"></span>!</h2>
+                <p class="description" style="text-align: center;">
+                    Elige el rango de edad para adaptar las preguntas:
+                </p>
+                <div class="mode-selection">
+                    <button id="start-kids-btn" class="btn primary-btn mode-btn">
+                        <span class="emoji">🧒</span>
+                        Test para Niños<br><small>(6 a 12 años)</small>
+                    </button>
+                    <button id="start-adults-btn" class="btn primary-btn mode-btn">
+                        <span class="emoji">🧑‍🎓</span>
+                        Jóvenes y Adultos<br><small>(13+ años)</small>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Pantalla 3: Preguntas -->
+            <section id="question-screen" class="screen hidden">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p id="progress-text" class="progress-text">Pregunta 1 de 15</p>
+                </div>
+                <div class="question-container">
+                    <h2 id="question-title" class="question-title">¿...?</h2>
+                    <div id="options-container" class="options-container"></div>
+                </div>
+                <div class="navigation-buttons">
+                    <button id="prev-btn" class="btn secondary-btn hidden">Anterior</button>
+                </div>
+            </section>
+
+            <!-- Pantalla 4: Resultados Personales -->
+            <section id="result-screen" class="screen hidden">
+                <div id="capture-area" style="width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px;">
+                    <h2>Resultados de <span id="res-name" style="color: var(--accent);"></span></h2>
+                    <p>Grupo: <strong id="res-group"></strong> | Género: <strong id="res-gender"></strong></p>
+                    
+                    <h1 id="dominant-style" class="dominant-style" style="margin-top: 20px;">...</h1>
+                    
+                    <div class="chart-container" style="width: 100%; max-width: 400px; margin: 0 auto 30px auto;">
+                        <div class="bar-row"><div class="bar-label">👁️ Visual</div><div class="bar-wrapper"><div id="bar-v" class="bar fill-v"></div></div><div id="pct-v" class="bar-pct">0%</div></div>
+                        <div class="bar-row"><div class="bar-label">👂 Auditivo</div><div class="bar-wrapper"><div id="bar-a" class="bar fill-a"></div></div><div id="pct-a" class="bar-pct">0%</div></div>
+                        <div class="bar-row"><div class="bar-label">✋ Kinestésico</div><div class="bar-wrapper"><div id="bar-k" class="bar fill-k"></div></div><div id="pct-k" class="bar-pct">0%</div></div>
+                    </div>
+
+                    <div id="result-description" class="result-description"></div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                    <button id="download-btn" class="btn primary-btn" style="background: #10b981;">Descargar Resultado</button>
+                    <button id="restart-btn" class="btn secondary-btn">Cerrar y Volver</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- PESTAÑA 2: ESTADÍSTICAS GRUPALES               -->
+        <!-- ============================================== -->
+        <div id="tab-stats" class="tab-content hidden">
+            <h1>Panel del Docente</h1>
+            <p class="description" style="text-align: center; margin-bottom: 10px;">Selecciona un grupo para ver sus métricas globales.</p>
+            
+            <div class="form-group" style="max-width: 300px; margin: 0 auto 30px auto;">
+                <select id="group-selector" class="glass-input">
+                    <option value="">-- Seleccionar Grupo --</option>
+                </select>
+            </div>
+
+            <div id="stats-container" class="hidden">
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Distribución de Estilos Predominantes</h3>
+                        <canvas id="chart-pie"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Promedio General V-A-K (%)</h3>
+                        <canvas id="chart-bar"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card" style="margin-top: 20px;">
+                    <h3>Participación Total por Grupo</h3>
+                    <canvas id="chart-participation" height="100"></canvas>
+                </div>
+            </div>
+            <div id="no-data-msg" style="text-align: center; color: var(--text-secondary);">
+                Aún no hay datos para mostrar.
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- PESTAÑA 3: COMENTARIOS                         -->
+        <!-- ============================================== -->
+        <div id="tab-comments" class="tab-content hidden">
+            <h1>Foro de Comentarios</h1>
+            
+            <div class="comment-form">
+                <input type="text" id="comment-name" placeholder="Tu Nombre" class="glass-input">
+                <textarea id="comment-text" placeholder="Escribe aquí tu opinión sobre el test o el modelo VAK..." class="glass-input" rows="3"></textarea>
+                <button id="submit-comment-btn" class="btn primary-btn" style="margin-top: 10px;">Publicar Comentario</button>
+            </div>
+
+            <div id="comments-list" class="comments-list">
+                <!-- Se inyectan los comentarios -->
+            </div>
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
