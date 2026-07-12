@@ -1,5 +1,7 @@
 # Aplicación de Estilos de Aprendizaje VAK
 
+**🌐 ¡Prueba la aplicación en vivo aquí! 👉 [https://wmlumen.github.io/VAK-1/](https://wmlumen.github.io/VAK-1/)**
+
 Esta aplicación web fue desarrollada como **instrumento empírico de apoyo** para la Monografía sobre Estilos de Aprendizaje VAK (Visual, Auditivo y Kinestésico), elaborada por **Christhian Keim (2026)**.
 
 ## 🚀 Características Principales
