@@ -279,6 +279,20 @@ canvas { max-width: 100%; }
     color: #fff;
 }
 
+/* --- IMPRESIÓN --- */
+@media print {
+    body { background: #fff !important; color: #000 !important; }
+    .hide-on-print, #mobile-nav, .lang-selector, .app-credits, .background-animation { display: none !important; }
+    .app-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
+    .chart-card { break-inside: avoid; background: #fff !important; box-shadow: none !important; border: 1px solid #ccc !important; }
+    .chart-card h3 { color: #000 !important; }
+    .kpi-card { background: #fff !important; border: 1px solid #ccc !important; }
+    .kpi-card h4, .kpi-card span, .kpi-card p { color: #000 !important; }
+    .students-sidebar { display: none !important; }
+    .glass { background: transparent !important; backdrop-filter: none !important; border: none !important;}
+    canvas { filter: invert(100%) hue-rotate(180deg); } /* Trick to make white text on charts black for printing if chart.defaults.color is white */
+}
+
 .fullscreen-qr {
     position: fixed !important;
     top: 50% !important;

@@ -38,6 +38,7 @@
         <ul>
             <li><button class="tab-btn active" data-tab="tab-test" data-i18n="tabTest">📝 Realizar Test</button></li>
             <li><button class="tab-btn" data-tab="tab-stats" data-i18n="tabStats">📊 Estadísticas de Grupo</button></li>
+            <li><button class="tab-btn" data-tab="tab-link">🔗 Enlace Docente</button></li>
             <li><button class="tab-btn" data-tab="tab-comments" data-i18n="tabComments">💬 Comentarios</button></li>
         </ul>
     </nav>
@@ -66,7 +67,7 @@
                     <label for="user-name" data-i18n="labelName">Tu Nombre:</label>
                     <input type="text" id="user-name" placeholder="Ej. Ana Pérez">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="group-container">
                     <label for="user-group" data-i18n="labelGroup">Código de Grupo (3 Letras + 3 Números):</label>
                     <input type="text" id="user-group" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
                     <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
@@ -84,7 +85,7 @@
                     <label for="user-age" data-i18n="labelAge">Edad:</label>
                     <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="country-container">
                     <label for="user-country" data-i18n="labelCountry">País:</label>
                     <select id="user-country" class="glass-input">
                         <option value="" disabled selected data-i18n="selectCountryDef">Cargando países...</option>
@@ -147,14 +148,16 @@
         <!-- PESTAÑA 2: ESTADÍSTICAS GRUPALES               -->
         <!-- ============================================== -->
         <div id="tab-stats" class="tab-content hidden">
-            <h1>Panel del Docente</h1>
-            <p class="description" style="text-align: center; margin-bottom: 10px;">Selecciona un grupo para ver sus métricas globales.</p>
+            <h1 class="hide-on-print">Panel del Docente</h1>
+            <p class="description hide-on-print" style="text-align: center; margin-bottom: 10px;">Selecciona un grupo para ver sus métricas globales.</p>
             
-            <div class="form-group" style="max-width: 300px; margin: 0 auto 15px auto;">
+            <div class="form-group hide-on-print" style="max-width: 300px; margin: 0 auto 15px auto;">
                 <select id="group-selector" class="glass-input">
                     <option value="">-- Seleccionar Grupo --</option>
                 </select>
             </div>
+            
+            <button id="print-stats-btn" class="btn btn-secondary hide-on-print" style="margin: 0 auto 20px auto; display: block;">🖨️ Imprimir / Descargar Reporte</button>
 
             <div id="stats-container" class="hidden">
                 <!-- Tarjetas KPI -->
@@ -187,6 +190,22 @@
                                 <h3>Promedio V-A-K (%)</h3>
                                 <canvas id="chart-bar"></canvas>
                             </div>
+                            <div class="chart-card">
+                                <h3>Países de Origen</h3>
+                                <canvas id="chart-countries"></canvas>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Estilos por Género</h3>
+                                <canvas id="chart-gender"></canvas>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Estilos por Rango de Edad</h3>
+                                <canvas id="chart-age-style"></canvas>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Distribución Exacta de Edades</h3>
+                                <canvas id="chart-age-dist"></canvas>
+                            </div>
                         </div>
                     </div>
                     
@@ -206,7 +225,38 @@
         </div>
 
         <!-- ============================================== -->
-        <!-- PESTAÑA 3: COMENTARIOS                         -->
+        <!-- PESTAÑA 3: ENLACE DOCENTE                      -->
+        <!-- ============================================== -->
+        <div id="tab-link" class="tab-content hidden">
+            <h1>Generador de Enlaces</h1>
+            <p class="description" style="text-align: center;">Crea un enlace mágico para tus alumnos. El formulario se acortará automáticamente.</p>
+            
+            <div class="form-group">
+                <label>Código de Grupo para el enlace:</label>
+                <input type="text" id="link-group" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;" class="glass-input">
+            </div>
+            <div class="form-group">
+                <label>País por defecto (Opcional):</label>
+                <select id="link-country-select" class="glass-input">
+                    <!-- Cloned from main country select in JS -->
+                    <option value="">(Autodetectar por IP)</option>
+                </select>
+            </div>
+            
+            <button id="generate-link-btn" class="btn primary-btn" style="width:100%; margin-top: 10px;">Generar Enlace Seguro</button>
+            
+            <div id="link-result-container" class="hidden" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--accent);">
+                <p style="font-size: 0.9rem; margin-bottom: 5px;">Tu enlace está listo para compartir:</p>
+                <input type="text" id="generated-link" class="glass-input" readonly style="margin-bottom: 10px; width: 100%; font-size: 0.8rem;">
+                <div style="display: flex; gap: 10px;">
+                    <button id="copy-link-btn" class="btn btn-secondary" style="flex: 1;">📋 Copiar</button>
+                    <button id="whatsapp-link-btn" class="btn" style="flex: 1; background: #25D366; color: white; border-color: #25D366;">💬 WhatsApp</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- PESTAÑA 4: COMENTARIOS                         -->
         <!-- ============================================== -->
         <div id="tab-comments" class="tab-content hidden">
             <h1>Foro de Comentarios</h1>

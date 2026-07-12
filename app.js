@@ -55,6 +55,10 @@ async function loadCountries() {
                 opt.innerText = c.name.common; 
                 select.appendChild(opt);
             });
+            
+            // Clone for link generator
+            document.getElementById('link-country-select').innerHTML = '<option value="">(Autodetectar por IP)</option>' + select.innerHTML;
+            
             countriesLoaded = true;
         }
     } catch (e) {
@@ -99,7 +103,35 @@ async function loadCountries() {
 
 // Inicializar idioma y países
 setLanguage('es');
-loadCountries();
+loadCountries().then(() => {
+    // Procesar parámetros URL si existen (Docente Link)
+    const params = new URLSearchParams(window.location.search);
+    const urlGroup = params.get('group');
+    const urlCountry = params.get('country');
+    
+    if (urlGroup) {
+        document.getElementById('user-group').value = urlGroup;
+        document.getElementById('group-container').classList.add('hidden'); // Acortar formulario
+    }
+    if (urlCountry) {
+        // Encontrar opción
+        let found = false;
+        const select = document.getElementById('user-country');
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === urlCountry || select.options[i].value.includes(urlCountry)) {
+                select.selectedIndex = i;
+                found = true; break;
+            }
+        }
+        if (!found) {
+            const opt = document.createElement('option');
+            opt.value = urlCountry; opt.innerText = urlCountry;
+            select.appendChild(opt);
+            select.selectedIndex = select.options.length - 1;
+        }
+        document.getElementById('country-container').classList.add('hidden'); // Acortar formulario
+    }
+});
 // --- NAVEGACIÓN TABS ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -117,6 +149,35 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         if (tabId === 'tab-stats') loadStats();
         if (tabId === 'tab-comments') loadComments();
     });
+});
+
+// --- LÓGICA DEL GENERADOR DE ENLACES (DOCENTES) ---
+document.getElementById('generate-link-btn').addEventListener('click', () => {
+    const group = document.getElementById('link-group').value.trim().toUpperCase();
+    const country = document.getElementById('link-country-select').value;
+    
+    if (!group) return alert("Por favor ingresa un código de grupo.");
+    
+    let url = window.location.origin + window.location.pathname + "?group=" + encodeURIComponent(group);
+    if (country) url += "&country=" + encodeURIComponent(country);
+    
+    document.getElementById('generated-link').value = url;
+    document.getElementById('link-result-container').classList.remove('hidden');
+});
+
+document.getElementById('copy-link-btn').addEventListener('click', () => {
+    const linkInput = document.getElementById('generated-link');
+    linkInput.select();
+    document.execCommand('copy'); // Legacy fallback
+    if (navigator.clipboard) navigator.clipboard.writeText(linkInput.value);
+    document.getElementById('copy-link-btn').innerText = "✅ Copiado";
+    setTimeout(() => document.getElementById('copy-link-btn').innerText = "📋 Copiar", 2000);
+});
+
+document.getElementById('whatsapp-link-btn').addEventListener('click', () => {
+    const url = document.getElementById('generated-link').value;
+    const text = `¡Hola! Por favor completa tu Test de Estilos de Aprendizaje VAK ingresando a este enlace (ya tiene nuestro código de grupo configurado):\n\n${url}`;
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
 });
 
 // --- PANTALLAS DEL TEST ---
@@ -373,7 +434,15 @@ async function saveResultToDB(name, group, gender, age, country, v, a, k, mainSt
 // --- ESTADÍSTICAS GRUPALES (CHART.JS) ---
 let chartPieInstance = null;
 let chartBarInstance = null;
-let chartPartInstance = null;
+let chartCountriesInstance = null;
+let chartGenderInstance = null;
+let chartAgeStyleInstance = null;
+let chartAgeDistInstance = null;
+
+// Impresión del Reporte
+document.getElementById('print-stats-btn').addEventListener('click', () => {
+    window.print();
+});
 
 async function loadStats() {
     // Se muestra estado de carga si lo deseas, acá bloquea hasta descargar
@@ -424,6 +493,12 @@ function drawCharts(selectedGroup, db) {
     let sumAge = 0;
     let countKids = 0; // <= 12
     let countAdults = 0; // 13+
+    
+    // Variables for advanced charts
+    const countriesCount = {};
+    const genderStyles = { M: {V:0, A:0, K:0}, F: {V:0, A:0, K:0}, O: {V:0, A:0, K:0} };
+    const ageGroupsStyles = { Kids: {V:0, A:0, K:0}, Adults: {V:0, A:0, K:0} };
+    const ageDist = {};
 
     data.forEach(item => {
         if (item.mainStyle === "Visual") countV++;
@@ -432,14 +507,33 @@ function drawCharts(selectedGroup, db) {
 
         sumV += item.v; sumA += item.a; sumK += item.k;
         
-        if (item.gender === "Masculino") countM++;
-        else if (item.gender === "Femenino") countF++;
+        let gKey = 'O';
+        if (item.gender === "Masculino") { countM++; gKey = 'M'; }
+        else if (item.gender === "Femenino") { countF++; gKey = 'F'; }
         else countO++;
+
+        // Advanced: Gender vs Style
+        if (item.mainStyle === "Visual") genderStyles[gKey].V++;
+        else if (item.mainStyle === "Auditivo") genderStyles[gKey].A++;
+        else if (item.mainStyle === "Kinestésico") genderStyles[gKey].K++;
+
+        // Advanced: Countries
+        let c = item.country || "Desconocido";
+        countriesCount[c] = (countriesCount[c] || 0) + 1;
 
         if (item.age) {
             sumAge += item.age;
-            if (item.age <= 12) countKids++;
-            else countAdults++;
+            let aKey = 'Adults';
+            if (item.age <= 12) { countKids++; aKey = 'Kids'; }
+            else { countAdults++; }
+            
+            // Advanced: Age distribution
+            ageDist[item.age] = (ageDist[item.age] || 0) + 1;
+            
+            // Advanced: Age vs Style
+            if (item.mainStyle === "Visual") ageGroupsStyles[aKey].V++;
+            else if (item.mainStyle === "Auditivo") ageGroupsStyles[aKey].A++;
+            else if (item.mainStyle === "Kinestésico") ageGroupsStyles[aKey].K++;
         }
     });
 
@@ -502,8 +596,74 @@ function drawCharts(selectedGroup, db) {
         options: { plugins: { legend: { position: 'bottom' } } }
     });
 
-    // 2. BAR CHART
+    // 2. BAR CHART (Avg VAK)
     renderBarChart(avgV, avgA, avgK, null, null);
+
+    // 3. COUNTRIES (Pie)
+    const ctxCountries = document.getElementById('chart-countries').getContext('2d');
+    if (chartCountriesInstance) chartCountriesInstance.destroy();
+    chartCountriesInstance = new Chart(ctxCountries, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(countriesCount),
+            datasets: [{
+                data: Object.values(countriesCount),
+                backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#64748b'],
+                borderWidth: 0
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // 4. GENDER vs STYLE (Stacked Bar)
+    const ctxGender = document.getElementById('chart-gender').getContext('2d');
+    if (chartGenderInstance) chartGenderInstance.destroy();
+    chartGenderInstance = new Chart(ctxGender, {
+        type: 'bar',
+        data: {
+            labels: ['Visual', 'Auditivo', 'Kinestésico'],
+            datasets: [
+                { label: 'Femenino', data: [genderStyles.F.V, genderStyles.F.A, genderStyles.F.K], backgroundColor: '#ec4899' },
+                { label: 'Masculino', data: [genderStyles.M.V, genderStyles.M.A, genderStyles.M.K], backgroundColor: '#3b82f6' },
+                { label: 'Otro', data: [genderStyles.O.V, genderStyles.O.A, genderStyles.O.K], backgroundColor: '#a8a29e' }
+            ]
+        },
+        options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // 5. AGE RANGE vs STYLE (Bar)
+    const ctxAgeStyle = document.getElementById('chart-age-style').getContext('2d');
+    if (chartAgeStyleInstance) chartAgeStyleInstance.destroy();
+    chartAgeStyleInstance = new Chart(ctxAgeStyle, {
+        type: 'bar',
+        data: {
+            labels: ['Visual', 'Auditivo', 'Kinestésico'],
+            datasets: [
+                { label: 'Niños (≤12)', data: [ageGroupsStyles.Kids.V, ageGroupsStyles.Kids.A, ageGroupsStyles.Kids.K], backgroundColor: '#14b8a6' },
+                { label: 'Adultos (13+)', data: [ageGroupsStyles.Adults.V, ageGroupsStyles.Adults.A, ageGroupsStyles.Adults.K], backgroundColor: '#f59e0b' }
+            ]
+        },
+        options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // 6. EXACT AGE DIST (Line/Bar)
+    const ctxAgeDist = document.getElementById('chart-age-dist').getContext('2d');
+    if (chartAgeDistInstance) chartAgeDistInstance.destroy();
+    const sortedAges = Object.keys(ageDist).sort((a,b)=>parseInt(a)-parseInt(b));
+    chartAgeDistInstance = new Chart(ctxAgeDist, {
+        type: 'bar',
+        data: {
+            labels: sortedAges,
+            datasets: [{
+                label: 'Cant. de Alumnos',
+                data: sortedAges.map(age => ageDist[age]),
+                backgroundColor: 'rgba(139, 92, 246, 0.6)',
+                borderColor: '#8b5cf6',
+                borderWidth: 1
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+    });
 }
 
 function renderBarChart(avgV, avgA, avgK, studentObj, studentName) {
