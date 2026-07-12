@@ -76,7 +76,7 @@ async function loadCountries() {
 
     // Populate link-country-select (Teacher generator) by cloning the options from user-country
     const linkSelect = document.getElementById('link-country-select');
-    linkSelect.innerHTML = '<option value="">(Dejar en blanco para Autodetectar por IP)</option>';
+    linkSelect.innerHTML = '<option value="" disabled selected>-- Detectando País... --</option>';
     for (let i = 1; i < select.options.length; i++) { // Skip index 0 ("Cargando países")
         const opt = document.createElement('option');
         opt.value = select.options[i].value;
@@ -84,15 +84,20 @@ async function loadCountries() {
         linkSelect.appendChild(opt);
     }
 
-    // Auto-detectar país por IP y seleccionarlo en el formulario principal
+    // Auto-detectar país por IP y seleccionarlo en ambos formularios
     try {
         const ipRes = await fetch('https://ipapi.co/json/');
         const ipData = await ipRes.json();
+        
+        // Re-establecer default en caso de que falle
+        linkSelect.options[0].innerText = "-- Elige tu país --";
+        
         if (ipData && ipData.country_name) {
             let found = false;
             for (let i = 0; i < select.options.length; i++) {
                 if (select.options[i].value === ipData.country_name || select.options[i].value.includes(ipData.country_name)) {
                     select.selectedIndex = i;
+                    linkSelect.selectedIndex = i; // Seleccionar también en Docente
                     found = true;
                     break;
                 }
@@ -103,9 +108,16 @@ async function loadCountries() {
                 opt.innerText = ipData.country_name;
                 select.appendChild(opt);
                 select.selectedIndex = select.options.length - 1;
+                
+                const optLink = document.createElement('option');
+                optLink.value = ipData.country_name;
+                optLink.innerText = ipData.country_name;
+                linkSelect.appendChild(optLink);
+                linkSelect.selectedIndex = linkSelect.options.length - 1;
             }
         }
     } catch (e) {
+        linkSelect.options[0].innerText = "-- Elige tu país --";
         console.error("Error detectando IP", e);
     }
 }
@@ -166,6 +178,7 @@ document.getElementById('generate-link-btn').addEventListener('click', async () 
     const country = document.getElementById('link-country-select').value;
     
     if (!group) return alert("Por favor ingresa un código de grupo.");
+    if (!country) return alert("Por favor selecciona un país para el grupo.");
     
     const regex = /^[A-Z]{3}[0-9]{3}$/;
     if (!regex.test(group)) {
