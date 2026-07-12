@@ -14,9 +14,6 @@
         <img src="https://flagcdn.com/w40/gb.png" alt="English" class="flag-btn" data-lang="en" title="English">
         <img src="https://flagcdn.com/w40/br.png" alt="Português" class="flag-btn" data-lang="pt" title="Português">
         <img src="https://flagcdn.com/w40/cn.png" alt="中文" class="flag-btn" data-lang="zh" title="中文">
-        <img src="https://flagcdn.com/w40/ru.png" alt="Русский" class="flag-btn" data-lang="ru" title="Русский">
-        <img src="https://flagcdn.com/w40/py.png" alt="Guaraní" class="flag-btn" data-lang="gn" title="Guaraní">
-    </div>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- HTML2Canvas -->
@@ -30,16 +27,33 @@
         <div class="blob blob-3"></div>
     </div>
 
-    <!-- Navegación de Pestañas Horizontal -->
-    
-    <nav id="mobile-nav">
-        <ul>
-            <li><button class="tab-btn active" data-tab="tab-test" data-i18n="tabTest">📝 Realizar Test</button></li>
-            <li><button class="tab-btn" data-tab="tab-stats" data-i18n="tabStats">📊 Estadísticas de Grupo</button></li>
-            <li><button class="tab-btn" data-tab="tab-link" data-i18n="tabLink">🔗 Compartir</button></li>
-            <li><button class="tab-btn" data-tab="tab-comments" data-i18n="tabComments">💬 Comentarios</button></li>
-        </ul>
-    </nav>
+    <!-- Header: Pestañas de Navegación y Selector de Idioma -->
+    <header class="app-header hide-on-print">
+        <nav class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('tab-test')">📝 Test</button>
+            <button class="tab-btn" onclick="switchTab('tab-stats')">📊 Métricas</button>
+            <button class="tab-btn" onclick="switchTab('tab-link')">🔗 Compartir</button>
+            <button class="tab-btn" onclick="switchTab('tab-comments')">💬 Opiniones</button>
+            <a href="../monografia.html" target="_blank" class="tab-btn" style="text-decoration: none; display: inline-flex; align-items: center;" title="Ver Resumen de Monografía">📄 Resumen</a>
+        </nav>
+
+        <div class="lang-switcher custom-dropdown">
+            <button class="tab-btn lang-btn" id="lang-btn" aria-label="Cambiar idioma de la interfaz" aria-haspopup="listbox" aria-expanded="false" onclick="toggleLangMenu()">
+                ES ▾
+            </button>
+            <ul id="lang-menu" class="lang-menu hidden" role="listbox">
+                <li class="lang-group">Idiomas locales</li>
+                <li role="option" onclick="changeLang('es')">ES – Español</li>
+                <li role="option" onclick="changeLang('gn')">GN – Guaraní</li>
+                <li class="lang-group">Región</li>
+                <li role="option" onclick="changeLang('en')">EN – English</li>
+                <li role="option" onclick="changeLang('pt')">PT – Português</li>
+                <li class="lang-group">Otros</li>
+                <li role="option" onclick="changeLang('zh')">ZH – 中文</li>
+                <li role="option" onclick="changeLang('ru')">RU – Русский</li>
+            </ul>
+        </div>
+    </header>
 
     <main class="app-container glass">
         
@@ -50,46 +64,73 @@
             
             <!-- Pantalla 1: Formulario de Ingreso -->
             <section id="welcome-screen" class="screen active">
-                <div class="qr-container">
-                    <p style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.2;">¿En PC?<br><strong>Escanea aquí</strong></p>
-                    <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://wmlumen.github.io/VAK-1/" alt="QR" style="width: 70px; height: 70px; border-radius: 8px; background: white; padding: 3px; cursor: pointer; transition: all 0.3s ease;" onclick="this.classList.toggle('fullscreen-qr')">
-                </div>
-
-                <h1 data-i18n="appTitle">Test VAK</h1>
-                <p class="description" style="text-align: center;" data-i18n="appDesc">
-                    Identifica tu estilo de aprendizaje predominante. <br>
-                    Por favor, ingresa tus datos para comenzar.
-                </p>
                 
-                <div class="form-group">
-                    <label for="user-name" data-i18n="labelName">Tu Nombre:</label>
-                    <input type="text" id="user-name" placeholder="Ej. Ana Pérez">
+                <div class="welcome-header">
+                    <h1 data-i18n="appTitle">Test VAK</h1>
+                    <p class="description" data-i18n="appDesc">Identifica tu estilo de aprendizaje predominante.</p>
                 </div>
-                <div class="form-group" id="group-container">
-                    <label for="user-group" data-i18n="labelGroup">Código de Grupo (3 Letras + 3 Números):</label>
-                    <input type="text" id="user-group" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
-                    <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
+                
+                <div class="welcome-layout">
+                    <!-- Formulario Central -->
+                    <div class="welcome-form-container">
+                        
+                        <fieldset class="form-fieldset">
+                            <legend>Datos Académicos</legend>
+                            <div class="form-group" id="group-container">
+                                <label for="user-group" data-i18n="labelGroup">Código de grupo (ej.: AAA111)</label>
+                                <input type="text" id="user-group" class="glass-input" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
+                                <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="form-fieldset">
+                            <legend>Datos Personales</legend>
+                            
+                            <div class="form-group">
+                                <label for="user-name" data-i18n="labelName">Nombre y apellido</label>
+                                <input type="text" id="user-name" class="glass-input" placeholder="Ej. Ana Pérez">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label for="user-age" data-i18n="labelAge">Edad</label>
+                                    <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
+                                    <small id="age-error" class="error-msg hidden">Entre 6 y 99 años.</small>
+                                </div>
+                                <div class="form-group half">
+                                    <label for="user-gender" data-i18n="labelGender">Género (opcional)</label>
+                                    <select id="user-gender" class="glass-input select-with-arrow">
+                                        <option value="" selected data-i18n="selectGenderDef">-- Selecciona --</option>
+                                        <option value="Masculino" data-i18n="genderM">Masculino</option>
+                                        <option value="Femenino" data-i18n="genderF">Femenino</option>
+                                        <option value="Otro" data-i18n="genderO">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" id="country-container">
+                                <label for="user-country" data-i18n="labelCountry">País</label>
+                                <select id="user-country" class="glass-input select-with-arrow">
+                                    <option value="" disabled selected data-i18n="selectCountryDef">-- Elige tu país --</option>
+                                </select>
+                            </div>
+                        </fieldset>
+                        
+                        <div style="text-align: center; margin-top: 10px;">
+                            <button id="continue-btn" class="btn primary-btn btn-large" data-i18n="btnContinue">Comenzar Test</button>
+                        </div>
+                    </div>
+
+                    <!-- Panel QR Lateral -->
+                    <div class="welcome-sidebar">
+                        <div class="qr-card">
+                            <div class="qr-icon">📱</div>
+                            <h4>¿Estás en PC?</h4>
+                            <p>Escanea el código para abrir el test cómodamente en tu celular.</p>
+                            <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://wmlumen.github.io/VAK-1/" alt="QR" onclick="this.classList.toggle('fullscreen-qr')">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="user-gender" data-i18n="labelGender">Género:</label>
-                    <select id="user-gender" class="glass-input">
-                        <option value="" disabled selected data-i18n="selectGenderDef">-- Selecciona --</option>
-                        <option value="Masculino" data-i18n="genderM">Masculino</option>
-                        <option value="Femenino" data-i18n="genderF">Femenino</option>
-                        <option value="Otro" data-i18n="genderO">Otro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="user-age" data-i18n="labelAge">Edad:</label>
-                    <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
-                </div>
-                <div class="form-group" id="country-container">
-                    <label for="user-country" data-i18n="labelCountry">País:</label>
-                    <select id="user-country" class="glass-input">
-                        <option value="" disabled selected data-i18n="selectCountryDef">-- Elige tu país --</option>
-                    </select>
-                </div>
-                <button id="continue-btn" class="btn primary-btn" style="width: 100%; margin-top: 15px;" data-i18n="btnContinue">Continuar</button>
             </section>
 
             <!-- Pantalla 2: Selección de Edad -->
@@ -146,109 +187,133 @@
         <!-- PESTAÑA 2: ESTADÍSTICAS GRUPALES               -->
         <!-- ============================================== -->
         <div id="tab-stats" class="tab-content hidden">
-            <h1 class="hide-on-print">Métricas</h1>
-            <p class="description hide-on-print" style="text-align: center; margin-bottom: 10px;">Selecciona un grupo para ver sus estadísticas.</p>
-            
-            <div class="form-group hide-on-print" style="max-width: 300px; margin: 0 auto 15px auto;">
-                <select id="group-selector" class="glass-input">
-                    <option value="">-- Seleccionar Grupo --</option>
-                </select>
+            <!-- Fila 1: Header & Toolbar -->
+            <div class="dashboard-header hide-on-print">
+                <div class="dashboard-title">
+                    <h1>Métricas</h1>
+                    <p class="description">Selecciona un grupo para ver sus estadísticas globales.</p>
+                </div>
+                
+                <div class="dashboard-toolbar">
+                    <div class="form-group" style="margin-bottom: 0; min-width: 220px;">
+                        <select id="group-selector" class="glass-input highlight-select">
+                            <option value="">-- Seleccionar Grupo --</option>
+                        </select>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button id="print-stats-btn" class="btn btn-secondary">🖨️ Imprimir Reporte</button>
+                    </div>
+                </div>
             </div>
-            
-            <button id="print-stats-btn" class="btn btn-secondary hide-on-print" style="margin: 0 auto 20px auto; display: block;">🖨️ Imprimir / Descargar Reporte</button>
 
             <div id="stats-container" class="hidden">
-                <!-- Tarjetas KPI -->
+                <!-- Fila 2: Tarjetas KPI -->
                 <div class="kpi-container" id="kpi-cards">
                     <div class="kpi-card">
-                        <h4>Total Alumnos</h4>
-                        <span id="kpi-total">0</span>
+                        <h4>TOTAL ALUMNOS</h4>
+                        <div class="kpi-value-large" id="kpi-total">0</div>
                     </div>
                     <div class="kpi-card">
-                        <h4>Desglose por Sexo</h4>
-                        <span id="kpi-gender" style="font-size: 1rem;">M: 0 | F: 0 | O: 0</span>
+                        <h4>DESGLOSE POR SEXO</h4>
+                        <div class="kpi-micro-visual" id="kpi-gender-visual">
+                            <!-- Injected via JS (Stacked Bar) -->
+                        </div>
                     </div>
                     <div class="kpi-card">
-                        <h4>Rangos de Edad</h4>
-                        <span id="kpi-age" style="font-size: 1rem;">Menores (≤12): 0 | Mayores (13+): 0</span>
-                        <p id="kpi-avg-age" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px; margin-bottom: 0;">Promedio: 0 años</p>
+                        <h4>RANGOS DE EDAD</h4>
+                        <div class="kpi-micro-badges" id="kpi-age-badges">
+                            <!-- Injected via JS (Badges) -->
+                        </div>
+                        <p id="kpi-avg-age" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 10px; font-weight: 600;">Promedio: 0 años</p>
                     </div>
                 </div>
                 
-                <!-- Layout principal Estadísticas -->
-                <div class="stats-layout">
-                    <!-- Gráficos -->
-                    <div class="charts-area">
-                        <div class="charts-grid">
-                            <div class="chart-card">
-                                <h3>Distribución de Estilos Predominantes</h3>
-                                <canvas id="chart-pie"></canvas>
-                            </div>
-                            <div class="chart-card">
-                                <h3>Promedio V-A-K (%)</h3>
-                                <canvas id="chart-bar"></canvas>
-                            </div>
-                            <div class="chart-card">
-                                <h3>Países de Origen</h3>
-                                <canvas id="chart-countries"></canvas>
-                            </div>
-                            <div class="chart-card">
-                                <h3>Estilos por Género</h3>
-                                <canvas id="chart-gender"></canvas>
-                            </div>
-                            <div class="chart-card">
-                                <h3>Estilos por Rango de Edad</h3>
-                                <canvas id="chart-age-style"></canvas>
-                            </div>
-                            <div class="chart-card">
-                                <h3>Distribución Exacta de Edades</h3>
-                                <canvas id="chart-age-dist"></canvas>
-                            </div>
+                <!-- Fila 3: Gráficos -->
+                <div class="charts-area">
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>Distribución de Estilos Predominantes</h3>
+                            <canvas id="chart-pie"></canvas>
                         </div>
-                    </div>
-                    
-                    <!-- Lista de Alumnos -->
-                    <div class="students-sidebar">
-                        <h3>Lista de Alumnos</h3>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">Toca un nombre para comparar su resultado.</p>
-                        <div id="students-list" class="students-list">
-                            <!-- Injected via JS -->
+                        <div class="chart-card">
+                            <h3>Promedio V-A-K (%)</h3>
+                            <canvas id="chart-bar"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Países de Origen</h3>
+                            <canvas id="chart-countries"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Estilos por Género</h3>
+                            <canvas id="chart-gender"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Estilos por Rango de Edad</h3>
+                            <canvas id="chart-age-style"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Distribución Exacta de Edades</h3>
+                            <canvas id="chart-age-dist"></canvas>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Fila 4: Lista de Alumnos y Comparación -->
+                <div class="students-dashboard-section hide-on-print">
+                    <div class="students-sidebar">
+                        <h3>Lista de Alumnos</h3>
+                        <p class="section-desc">Selecciona un nombre para compararlo.</p>
+                        <div id="students-chips-list" class="students-chips">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                    <div class="students-comparison-panel" id="student-comparison-panel">
+                        <div class="comparison-empty" id="comparison-empty">
+                            <p>👆 Selecciona un alumno de la lista para ver su perfil.</p>
+                        </div>
+                        <!-- Profile Card injected via JS -->
+                    </div>
+                </div>
             </div>
-            <div id="no-data-msg" style="text-align: center; color: var(--text-secondary);">
-                Aún no hay datos para mostrar.
+            
+            <div id="no-data-msg" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">
+                <p>Aún no hay datos para mostrar.</p>
             </div>
         </div>
 
         <!-- ============================================== -->
         <!-- PESTAÑA 3: COMPARTIR (DOCENTE LINK)            -->
         <!-- ============================================== -->
-        <div id="tab-link" class="tab-content hidden">
-            <h1 data-i18n="shareTitle">Generador de Enlaces</h1>
-            <p class="description" style="text-align: center;">Crea un enlace mágico para tus alumnos. El formulario se acortará automáticamente.</p>
-            
-            <div class="form-group">
-                <label>Código de Grupo para el enlace:</label>
-                <input type="text" id="link-group" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;" class="glass-input">
-            </div>
-            <div class="form-group">
-                <label>País del Grupo:</label>
-                <select id="link-country-select" class="glass-input">
-                    <!-- Cloned from main country select in JS -->
-                    <option value="" disabled selected>-- Detectando País... --</option>
-                </select>
-            </div>
-            
-            <button id="generate-link-btn" class="btn primary-btn" style="width:100%; margin-top: 10px;">Generar Enlace Seguro</button>
-            
-            <div id="link-result-container" class="hidden" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--accent);">
-                <p style="font-size: 0.9rem; margin-bottom: 5px;">Tu enlace está listo para compartir:</p>
-                <input type="text" id="generated-link" class="glass-input" readonly style="margin-bottom: 10px; width: 100%; font-size: 0.8rem;">
-                <div style="display: flex; gap: 10px;">
-                    <button id="copy-link-btn" class="btn btn-secondary" style="flex: 1;">📋 Copiar</button>
-                    <button id="whatsapp-link-btn" class="btn" style="flex: 1; background: #25D366; color: white; border-color: #25D366;">💬 WhatsApp</button>
+        <div id="tab-link" class="tab-content hidden" style="align-items: center; padding-top: 20px;">
+            <div class="form-fieldset" style="max-width: 500px; width: 100%; background: rgba(30, 41, 59, 0.7); box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-color: var(--accent);">
+                <h1 data-i18n="shareTitle" style="font-size: 1.8rem; margin-bottom: 5px;">Generador de Enlaces</h1>
+                <p class="description" style="text-align: center; margin-bottom: 25px; font-size: 0.9rem;">Crea un enlace mágico para tus alumnos. El formulario se acortará automáticamente.</p>
+                
+                <div class="form-group">
+                    <label>Código de Grupo para el enlace</label>
+                    <input type="text" id="link-group" placeholder="Ej.: MAT123" maxlength="6" style="text-transform: uppercase;" class="glass-input">
+                    <small style="color: var(--text-secondary); display: block; margin-top: 5px; font-size: 0.8rem;">Debe coincidir con el código que usarán los alumnos.</small>
+                    <small id="link-group-error" class="error-msg hidden">Ingresa un código de grupo válido (3 letras y 3 números).</small>
+                    <a href="#" id="use-last-code-link" style="font-size: 0.8rem; color: var(--accent); margin-top: 5px; display: inline-block; text-decoration: underline; display: none;">Usar el último código (<span id="last-code-val"></span>)</a>
+                </div>
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label>País del Grupo</label>
+                    <select id="link-country-select" class="glass-input select-with-arrow">
+                        <!-- Cloned from main country select in JS -->
+                        <option value="" disabled selected>-- Detectando País... --</option>
+                    </select>
+                </div>
+                
+                <button id="generate-link-btn" class="btn primary-btn btn-large" style="width:100%; max-width: 100%;">Generar enlace</button>
+                
+                <div id="link-result-container" class="hidden" style="margin-top: 25px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--accent);">
+                    <p style="font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">Tu enlace está listo para compartir:</p>
+                    <input type="text" id="generated-link" class="glass-input" readonly style="margin-bottom: 15px; width: 100%; font-size: 0.85rem; color: var(--accent);">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="copy-link-btn" class="btn btn-secondary" style="flex: 1; min-width: 120px;">📋 Copiar</button>
+                        <button id="whatsapp-link-btn" class="btn" style="flex: 1; min-width: 120px; background: #25D366; color: white; border-color: #25D366;">💬 WhatsApp</button>
+                    </div>
+                    <p id="copy-success-msg" style="color: #10b981; font-size: 0.85rem; margin-top: 15px; text-align: center; display: none;">✅ Enlace copiado al portapapeles. Compártelo con tu grupo.</p>
                 </div>
             </div>
         </div>
@@ -256,32 +321,51 @@
         <!-- ============================================== -->
         <!-- PESTAÑA 4: COMENTARIOS                         -->
         <!-- ============================================== -->
-        <div id="tab-comments" class="tab-content hidden">
-            <h1>Foro de Comentarios</h1>
-            
-            <div class="comment-form">
-                <input type="text" id="comment-name" placeholder="Tu Nombre" class="glass-input">
-                <textarea id="comment-text" placeholder="Escribe aquí tu opinión sobre el test o el modelo VAK..." class="glass-input" rows="3"></textarea>
-                <button id="submit-comment-btn" class="btn primary-btn" style="margin-top: 10px;">Publicar Comentario</button>
-            </div>
+        <div id="tab-comments" class="tab-content hidden" style="align-items: center; padding-top: 20px;">
+            <div style="max-width: 600px; width: 100%;">
+                <h1 style="font-size: 1.8rem; margin-bottom: 25px;">Opiniones</h1>
+                
+                <div class="form-fieldset" style="background: rgba(30, 41, 59, 0.7); max-width: 100%; border-color: var(--accent); padding: 25px;">
+                    <h3 style="margin-bottom: 20px; font-size: 1.3rem;">Deja tu comentario</h3>
+                    
+                    <div class="form-group" style="max-width: 100%;">
+                        <label>Tu nombre</label>
+                        <input type="text" id="comment-name" placeholder="Ej. Ana Pérez" class="glass-input">
+                    </div>
+                    <div class="form-group" style="max-width: 100%;">
+                        <label>Comentario</label>
+                        <textarea id="comment-text" placeholder="Escribe aquí tu opinión sobre el test o el modelo VAK..." class="glass-input" rows="4"></textarea>
+                        <small id="comment-error" class="error-msg hidden">Por favor completa tu nombre y comentario.</small>
+                    </div>
+                    
+                    <button id="submit-comment-btn" class="btn primary-btn btn-large" style="width: 100%; max-width: 100%; margin-top: 5px;">Publicar Comentario</button>
+                </div>
 
-            <div id="comments-list" class="comments-list">
-                <!-- Se inyectan los comentarios -->
+                <hr style="border: none; border-top: 1px solid var(--card-border); margin: 35px 0;">
+
+                <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--text-secondary);">Comentarios recientes</h3>
+                <div id="comments-list" class="comments-list">
+                    <!-- Se inyectan los comentarios -->
+                </div>
             </div>
         </div>
 
     </main>
 
+    <!-- Separador antes del footer -->
+    <hr class="hide-on-print" style="border: none; border-top: 1px solid var(--card-border); margin: 40px auto 10px auto; width: 95%; max-width: 800px;">
+
     <footer class="app-credits hide-on-print">
-        <p>Desarrollado por <strong><a href="mailto:wmlumen@gmail.com" style="color: var(--accent); text-decoration: none;" title="Contactar por email">Christhian Keim</a></strong> (2026)</p>
-        <p>
-            Instrumento empírico de apoyo para la <a href="../monografia.html" target="_blank">Monografía VAK</a>.
-            <br>
-            <a href="https://github.com/wmlumen/VAK-1" target="_blank" style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px; display: inline-block;">
-                <svg viewBox="0 0 16 16" width="14" height="14" style="vertical-align: text-bottom; fill: currentColor;"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.46-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
-                Ver Código Fuente en GitHub
+        <div class="footer-left">
+            <p style="margin: 0; margin-bottom: 5px;">Desarrollado por <strong><a href="mailto:wmlumen@gmail.com" title="Contactar por email">Christhian Keim</a></strong> (2026)</p>
+            <p class="footer-subtext">Instrumento empírico de apoyo para la Monografía VAK</p>
+        </div>
+        <div class="footer-right">
+            <a href="https://github.com/wmlumen/VAK-1" target="_blank" class="btn btn-github">
+                <svg viewBox="0 0 16 16" width="14" height="14" style="vertical-align: text-bottom; fill: currentColor; margin-right: 4px;"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.46-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
+                Ver Código
             </a>
-        </p>
+        </div>
     </footer>
 
     <script src="i18n.js"></script>
