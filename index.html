@@ -62,70 +62,84 @@
         <!-- ============================================== -->
         <div id="tab-test" class="tab-content active">
             
-            <!-- Pantalla 1: Formulario de Ingreso -->
+            <!-- Pantalla 1: Formulario de Ingreso en 2 Pasos -->
             <section id="welcome-screen" class="screen active">
                 
-                <div class="welcome-header" style="margin-bottom: 15px;">
+                <div class="welcome-header" id="welcome-intro" style="margin-bottom: 15px;">
                     <h1 data-i18n="appTitle" style="margin-bottom: 5px;">Test VAK</h1>
-                    <p class="description" data-i18n="appDesc" style="margin-bottom: 15px;">Identifica tu estilo de aprendizaje predominante.</p>
+                    <p class="description" data-i18n="appDesc" style="margin-bottom: 15px;">Identifica tu estilo de aprendizaje predominante en menos de 3 minutos.</p>
                 </div>
 
-                <!-- Banner QR ARRIBA (Compacto) -->
-                <div class="qr-banner-top">
-                    <div class="qr-banner-text">
-                        <h4>📱 ¿Estás en PC? Escanea para responder desde tu celular</h4>
-                        <p>Apunta tu cámara al código QR para abrir el test al instante en tu dispositivo móvil o completa el formulario abajo.</p>
-                    </div>
-                    <div class="qr-banner-img">
-                        <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://wmlumen.github.io/VAK-1/" alt="QR VAK" title="Escanea con tu celular">
-                    </div>
-                </div>
-
-                <!-- Formulario Compacto en 2 Columnas -->
-                <div class="welcome-form-grid">
-                    <fieldset class="form-fieldset">
-                        <legend>Datos Académicos</legend>
-                        <div class="form-group" id="group-container">
-                            <label for="user-group" data-i18n="labelGroup">Código de grupo (ej.: AAA111)</label>
-                            <input type="text" id="user-group" class="glass-input" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
-                            <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
-                        </div>
-                        <div class="form-group" id="country-container" style="margin-top: 15px;">
-                            <label for="user-country" data-i18n="labelCountry">País</label>
-                            <select id="user-country" class="glass-input select-with-arrow">
-                                <option value="" disabled selected data-i18n="selectCountryDef">-- Elige tu país --</option>
-                            </select>
-                        </div>
-                    </fieldset>
-
-                    <fieldset class="form-fieldset">
-                        <legend>Datos Personales</legend>
-                        <div class="form-group">
-                            <label for="user-name" data-i18n="labelName">Nombre y apellido</label>
-                            <input type="text" id="user-name" class="glass-input" placeholder="Ej. Ana Pérez">
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group half">
-                                <label for="user-age" data-i18n="labelAge">Edad</label>
-                                <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
-                                <small id="age-error" class="error-msg hidden">Entre 6 y 99 años.</small>
+                <div class="welcome-wizard-layout">
+                    <!-- Columna Izquierda: Pasos del Wizard -->
+                    <div class="wizard-main">
+                        <!-- Paso 1: Datos Académicos -->
+                        <div id="wizard-step-1" class="wizard-card active-step">
+                            <div class="step-badge">Paso 1 · Datos académicos</div>
+                            <div class="form-row" style="margin-top: 15px;">
+                                <div class="form-group half">
+                                    <label for="user-group" data-i18n="labelGroup">Código de grupo (ej.: AAA111)</label>
+                                    <input type="text" id="user-group" class="glass-input" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
+                                    <small id="group-error" class="error-msg hidden">Formato inválido: 3 letras y 3 números.</small>
+                                </div>
+                                <div class="form-group half">
+                                    <label for="user-country" data-i18n="labelCountry">País</label>
+                                    <select id="user-country" class="glass-input select-with-arrow">
+                                        <option value="" disabled selected data-i18n="selectCountryDef">-- Elige tu país --</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group half">
-                                <label for="user-gender" data-i18n="labelGender">Género (opcional)</label>
-                                <select id="user-gender" class="glass-input select-with-arrow">
-                                    <option value="" selected data-i18n="selectGenderDef">-- Selecciona --</option>
-                                    <option value="Masculino" data-i18n="genderM">Masculino</option>
-                                    <option value="Femenino" data-i18n="genderF">Femenino</option>
-                                    <option value="Otro" data-i18n="genderO">Otro</option>
-                                </select>
+                            <button id="step-1-btn" class="btn primary-btn" style="width: 100%; margin-top: 10px;">Siguiente paso →</button>
+                            <p class="step-hint">Si tu docente ya te compartió un enlace con el grupo pre-cargado, este paso se completará automáticamente.</p>
+                        </div>
+
+                        <!-- Paso 2: Datos Personales -->
+                        <div id="wizard-step-2" class="wizard-card hidden-step">
+                            <div class="step-header-flex">
+                                <div class="step-badge">Paso 2 · Tus datos personales</div>
+                                <span id="step-1-summary" class="step-summary-tag"></span>
+                            </div>
+                            
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label for="user-name" data-i18n="labelName">Nombre y apellido</label>
+                                <input type="text" id="user-name" class="glass-input" placeholder="Ej. Ana Pérez">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label for="user-age" data-i18n="labelAge">Edad</label>
+                                    <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
+                                    <small id="age-error" class="error-msg hidden">Entre 6 y 99 años.</small>
+                                </div>
+                                <div class="form-group half">
+                                    <label for="user-gender" data-i18n="labelGender">Género (opcional)</label>
+                                    <select id="user-gender" class="glass-input select-with-arrow">
+                                        <option value="" selected data-i18n="selectGenderDef">-- Selecciona --</option>
+                                        <option value="Masculino" data-i18n="genderM">Masculino</option>
+                                        <option value="Femenino" data-i18n="genderF">Femenino</option>
+                                        <option value="Otro" data-i18n="genderO">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; margin-top: 15px;">
+                                <button id="step-2-back" class="btn secondary-btn" style="padding: 12px 18px;">← Cambiar grupo</button>
+                                <button id="continue-btn" class="btn primary-btn" style="flex: 1;" data-i18n="btnContinue">Comenzar Test VAK 🚀</button>
                             </div>
                         </div>
-                    </fieldset>
-                </div>
-                
-                <div style="text-align: center; margin-top: 5px; width: 100%;">
-                    <button id="continue-btn" class="btn primary-btn btn-large" style="min-width: 260px;" data-i18n="btnContinue">Comenzar Test</button>
+                    </div>
+
+                    <!-- Columna Derecha / Abajo: QR Compacto -->
+                    <div class="wizard-sidebar">
+                        <div class="qr-compact-card">
+                            <div class="qr-compact-header">
+                                <span class="qr-compact-icon">📱</span>
+                                <h4>¿Estás en PC? Escanea para responder en tu celular</h4>
+                            </div>
+                            <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://wmlumen.github.io/VAK-1/" alt="QR VAK" title="Escanea con tu celular">
+                            <p class="qr-hint">Apunta tu cámara para abrir este test cómodamente en tu teléfono.</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 

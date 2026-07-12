@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     changeLang(langToSet);
     loadCountries();
+    initWizard();
 });
 
 // Dropdown Logic
@@ -328,6 +329,55 @@ function showScreen(screenName) {
     screens[screenName].classList.remove('hidden');
     screens[screenName].classList.add('active');
 }
+
+// Wizard en 2 pasos para onboarding
+function initWizard() {
+    const params = new URLSearchParams(window.location.search);
+    const groupParam = params.get('group');
+    const countryParam = params.get('country');
+
+    if (groupParam) {
+        document.getElementById('user-group').value = groupParam.toUpperCase();
+        if (countryParam) {
+            const countrySelect = document.getElementById('user-country');
+            if (countrySelect) countrySelect.value = countryParam;
+        }
+        advanceToStep2(groupParam.toUpperCase(), countryParam || "Paraguay");
+    }
+}
+
+function advanceToStep2(groupVal, countryVal) {
+    const step2 = document.getElementById('wizard-step-2');
+    const summaryTag = document.getElementById('step-1-summary');
+    const intro = document.getElementById('welcome-intro');
+
+    if (summaryTag) summaryTag.innerText = `✅ ${groupVal} – ${countryVal}`;
+    if (step2) step2.classList.remove('hidden-step');
+    if (intro) intro.style.display = 'none';
+
+    setTimeout(() => {
+        document.getElementById('user-name')?.focus();
+    }, 100);
+}
+
+document.getElementById('step-1-btn')?.addEventListener('click', () => {
+    const groupVal = document.getElementById('user-group').value.trim().toUpperCase();
+    const countryVal = document.getElementById('user-country').value || "No especificado";
+    const errorMsg = document.getElementById('group-error');
+    const regex = /^[a-zA-Z]{3}[0-9]{3}$/;
+
+    if (!regex.test(groupVal)) {
+        errorMsg.classList.remove('hidden');
+        document.getElementById('user-group').focus();
+        return;
+    }
+    errorMsg.classList.add('hidden');
+    advanceToStep2(groupVal, countryVal);
+});
+
+document.getElementById('step-2-back')?.addEventListener('click', () => {
+    document.getElementById('user-group')?.focus();
+});
 
 // 1. Validar Usuario y Grupo
 document.getElementById('continue-btn').addEventListener('click', () => {
