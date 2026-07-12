@@ -28,14 +28,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // --- NAVEGACIÓN POR PESTAÑAS ---
 window.switchTab = function(tabId) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+        tab.classList.add('hidden');
+    });
     document.querySelectorAll('.tab-btn').forEach(btn => {
         if (!btn.classList.contains('lang-btn') && !btn.hasAttribute('href')) {
             btn.classList.remove('active');
         }
     });
     const targetTab = document.getElementById(tabId);
-    if (targetTab) targetTab.classList.add('active');
+    if (targetTab) {
+        targetTab.classList.remove('hidden');
+        targetTab.classList.add('active');
+    }
     
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
