@@ -130,6 +130,8 @@ function renderQuestion() {
     const optContainer = document.getElementById('options-container');
     optContainer.innerHTML = '';
     
+    let transitionTimeout = null;
+    
     question.options.forEach((opt) => {
         const div = document.createElement('div');
         div.className = 'option-card';
@@ -137,10 +139,16 @@ function renderQuestion() {
         if (answers[currentQuestionIndex] === opt.style) div.classList.add('selected');
         
         div.addEventListener('click', (e) => {
+            if (transitionTimeout) return; // Evitar doble clic
+            
             optContainer.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
             e.target.classList.add('selected');
             answers[currentQuestionIndex] = opt.style;
-            setTimeout(nextQuestion, 300);
+            
+            transitionTimeout = setTimeout(() => {
+                transitionTimeout = null;
+                nextQuestion();
+            }, 350);
         });
         optContainer.appendChild(div);
     });
@@ -165,11 +173,23 @@ function nextQuestion() {
 function calculateResults() {
     const counts = { V: 0, A: 0, K: 0 };
     answers.forEach(ans => { if (ans) counts[ans]++; });
-    const total = currentQuestions.length;
     
-    const pV = Math.round((counts.V / total) * 100);
-    const pA = Math.round((counts.A / total) * 100);
-    const pK = Math.round((counts.K / total) * 100);
+    // Base math on actual answers to avoid < 100% if someone skips via bugs
+    const answeredTotal = counts.V + counts.A + counts.K;
+    const total = answeredTotal > 0 ? answeredTotal : 1; 
+    
+    let pV = Math.round((counts.V / total) * 100);
+    let pA = Math.round((counts.A / total) * 100);
+    let pK = Math.round((counts.K / total) * 100);
+
+    // Forzar que la sumatoria sea exactamente 100% corrigiendo desfases de redondeo
+    const sum = pV + pA + pK;
+    if (sum > 0 && sum !== 100) {
+        const diff = 100 - sum;
+        if (pV >= pA && pV >= pK) pV += diff;
+        else if (pA >= pV && pA >= pK) pA += diff;
+        else pK += diff;
+    }
 
     let max = Math.max(pV, pA, pK);
     const dominants = [];
