@@ -353,6 +353,8 @@ function drawCharts(selectedGroup, db) {
     let sumV = 0, sumA = 0, sumK = 0;
     let countM = 0, countF = 0, countO = 0;
     let sumAge = 0;
+    let countKids = 0; // <= 12
+    let countAdults = 0; // 13+
 
     data.forEach(item => {
         if (item.mainStyle === "Visual") countV++;
@@ -365,7 +367,11 @@ function drawCharts(selectedGroup, db) {
         else if (item.gender === "Femenino") countF++;
         else countO++;
 
-        if (item.age) sumAge += item.age;
+        if (item.age) {
+            sumAge += item.age;
+            if (item.age <= 12) countKids++;
+            else countAdults++;
+        }
     });
 
     const total = data.length;
@@ -377,7 +383,8 @@ function drawCharts(selectedGroup, db) {
     // Update KPI Cards
     document.getElementById('kpi-total').innerText = total;
     document.getElementById('kpi-gender').innerText = `M: ${countM} | F: ${countF} | O: ${countO}`;
-    document.getElementById('kpi-age').innerText = avgAge > 0 ? `${avgAge} años` : 'N/A';
+    document.getElementById('kpi-age').innerText = `Menores (≤12): ${countKids} | Mayores (13+): ${countAdults}`;
+    document.getElementById('kpi-avg-age').innerText = avgAge > 0 ? `Promedio general: ${avgAge} años` : '';
 
     // --- POBLAR LISTA DE ALUMNOS ---
     const listEl = document.getElementById('students-list');
