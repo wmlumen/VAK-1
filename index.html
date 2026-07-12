@@ -65,71 +65,67 @@
             <!-- Pantalla 1: Formulario de Ingreso -->
             <section id="welcome-screen" class="screen active">
                 
-                <div class="welcome-header">
-                    <h1 data-i18n="appTitle">Test VAK</h1>
-                    <p class="description" data-i18n="appDesc">Identifica tu estilo de aprendizaje predominante.</p>
+                <div class="welcome-header" style="margin-bottom: 15px;">
+                    <h1 data-i18n="appTitle" style="margin-bottom: 5px;">Test VAK</h1>
+                    <p class="description" data-i18n="appDesc" style="margin-bottom: 15px;">Identifica tu estilo de aprendizaje predominante.</p>
                 </div>
-                
-                <div class="welcome-layout">
-                    <!-- Formulario Central -->
-                    <div class="welcome-form-container">
-                        
-                        <fieldset class="form-fieldset">
-                            <legend>Datos Académicos</legend>
-                            <div class="form-group" id="group-container">
-                                <label for="user-group" data-i18n="labelGroup">Código de grupo (ej.: AAA111)</label>
-                                <input type="text" id="user-group" class="glass-input" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
-                                <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
-                            </div>
-                        </fieldset>
 
-                        <fieldset class="form-fieldset">
-                            <legend>Datos Personales</legend>
-                            
-                            <div class="form-group">
-                                <label for="user-name" data-i18n="labelName">Nombre y apellido</label>
-                                <input type="text" id="user-name" class="glass-input" placeholder="Ej. Ana Pérez">
+                <!-- Banner QR ARRIBA (Compacto) -->
+                <div class="qr-banner-top">
+                    <div class="qr-banner-text">
+                        <h4>📱 ¿Estás en PC? Escanea para responder desde tu celular</h4>
+                        <p>Apunta tu cámara al código QR para abrir el test al instante en tu dispositivo móvil o completa el formulario abajo.</p>
+                    </div>
+                    <div class="qr-banner-img">
+                        <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://wmlumen.github.io/VAK-1/" alt="QR VAK" title="Escanea con tu celular">
+                    </div>
+                </div>
+
+                <!-- Formulario Compacto en 2 Columnas -->
+                <div class="welcome-form-grid">
+                    <fieldset class="form-fieldset">
+                        <legend>Datos Académicos</legend>
+                        <div class="form-group" id="group-container">
+                            <label for="user-group" data-i18n="labelGroup">Código de grupo (ej.: AAA111)</label>
+                            <input type="text" id="user-group" class="glass-input" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
+                            <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
+                        </div>
+                        <div class="form-group" id="country-container" style="margin-top: 15px;">
+                            <label for="user-country" data-i18n="labelCountry">País</label>
+                            <select id="user-country" class="glass-input select-with-arrow">
+                                <option value="" disabled selected data-i18n="selectCountryDef">-- Elige tu país --</option>
+                            </select>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="form-fieldset">
+                        <legend>Datos Personales</legend>
+                        <div class="form-group">
+                            <label for="user-name" data-i18n="labelName">Nombre y apellido</label>
+                            <input type="text" id="user-name" class="glass-input" placeholder="Ej. Ana Pérez">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label for="user-age" data-i18n="labelAge">Edad</label>
+                                <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
+                                <small id="age-error" class="error-msg hidden">Entre 6 y 99 años.</small>
                             </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group half">
-                                    <label for="user-age" data-i18n="labelAge">Edad</label>
-                                    <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
-                                    <small id="age-error" class="error-msg hidden">Entre 6 y 99 años.</small>
-                                </div>
-                                <div class="form-group half">
-                                    <label for="user-gender" data-i18n="labelGender">Género (opcional)</label>
-                                    <select id="user-gender" class="glass-input select-with-arrow">
-                                        <option value="" selected data-i18n="selectGenderDef">-- Selecciona --</option>
-                                        <option value="Masculino" data-i18n="genderM">Masculino</option>
-                                        <option value="Femenino" data-i18n="genderF">Femenino</option>
-                                        <option value="Otro" data-i18n="genderO">Otro</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group" id="country-container">
-                                <label for="user-country" data-i18n="labelCountry">País</label>
-                                <select id="user-country" class="glass-input select-with-arrow">
-                                    <option value="" disabled selected data-i18n="selectCountryDef">-- Elige tu país --</option>
+                            <div class="form-group half">
+                                <label for="user-gender" data-i18n="labelGender">Género (opcional)</label>
+                                <select id="user-gender" class="glass-input select-with-arrow">
+                                    <option value="" selected data-i18n="selectGenderDef">-- Selecciona --</option>
+                                    <option value="Masculino" data-i18n="genderM">Masculino</option>
+                                    <option value="Femenino" data-i18n="genderF">Femenino</option>
+                                    <option value="Otro" data-i18n="genderO">Otro</option>
                                 </select>
                             </div>
-                        </fieldset>
-                        
-                        <div style="text-align: center; margin-top: 10px;">
-                            <button id="continue-btn" class="btn primary-btn btn-large" data-i18n="btnContinue">Comenzar Test</button>
                         </div>
-                    </div>
-
-                    <!-- Panel QR Lateral -->
-                    <div class="welcome-sidebar">
-                        <div class="qr-card">
-                            <div class="qr-icon">📱</div>
-                            <h4>¿Estás en PC?</h4>
-                            <p>Escanea el código para abrir el test cómodamente en tu celular.</p>
-                            <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://wmlumen.github.io/VAK-1/" alt="QR" onclick="this.classList.toggle('fullscreen-qr')">
-                        </div>
-                    </div>
+                    </fieldset>
+                </div>
+                
+                <div style="text-align: center; margin-top: 5px; width: 100%;">
+                    <button id="continue-btn" class="btn primary-btn btn-large" style="min-width: 260px;" data-i18n="btnContinue">Comenzar Test</button>
                 </div>
             </section>
 

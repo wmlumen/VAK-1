@@ -174,15 +174,72 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .hidden { display: none !important; }
 
 /* Welcome Screen Layout */
-.welcome-header { text-align: center; margin-bottom: 25px; }
-.welcome-layout { display: flex; gap: 40px; width: 100%; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
-.welcome-form-container { flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center;}
-.welcome-sidebar { width: 250px; }
+.welcome-header { text-align: center; margin-bottom: 15px; }
+
+/* QR Top Horizontal Banner */
+.qr-banner-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 15px 25px;
+    margin-bottom: 20px;
+    gap: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+.qr-banner-text {
+    text-align: left;
+    flex: 1;
+}
+.qr-banner-text h4 {
+    margin: 0 0 5px 0;
+    color: white;
+    font-size: 1.05rem;
+    text-align: left;
+}
+.qr-banner-text p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+.qr-banner-img img {
+    width: 90px;
+    height: 90px;
+    background: white;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* Compact 2-column Form Grid */
+.welcome-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 15px;
+}
+.welcome-form-grid .form-fieldset {
+    margin-bottom: 0;
+    max-width: 100%;
+}
 
 @media (max-width: 768px) {
-    .welcome-layout { flex-direction: column; align-items: center; gap: 20px;}
-    .welcome-sidebar { width: 100%; max-width: 350px; }
-    .form-fieldset { max-width: 100%; }
+    .qr-banner-top {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    .qr-banner-text, .qr-banner-text h4 {
+        text-align: center;
+    }
+    .welcome-form-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Buttons */
