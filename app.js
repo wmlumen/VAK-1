@@ -379,7 +379,10 @@ document.getElementById('continue-btn').addEventListener('click', () => {
     currentUser.country = countryVal;
     
     document.getElementById('display-name').innerText = nameVal;
-    showScreen('start');
+    
+    // Iniciar directamente el cuestionario según la edad ingresada (sin clic intermedio redundante)
+    const mode = ageNum <= 12 ? 'kids' : 'adults';
+    startTest(mode);
 });
 
 // 2. Iniciar Test
