@@ -203,3 +203,25 @@ canvas { max-width: 100%; }
 .comment-author { font-weight: bold; color: var(--accent); margin-bottom: 5px; font-size: 0.9rem;}
 .comment-date { font-size: 0.8rem; color: var(--text-secondary); margin-left: 10px; }
 .comment-body { font-size: 0.95rem; line-height: 1.5; }
+
+/* Footer / Credits */
+.app-credits {
+    margin-top: 30px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 15px 30px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+}
+.app-credits a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+.app-credits a:hover {
+    text-decoration: underline;
+}
