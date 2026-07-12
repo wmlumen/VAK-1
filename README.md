@@ -1,6 +1,6 @@
 # Aplicación de Estilos de Aprendizaje VAK
 
-Esta aplicación web fue desarrollada como **instrumento empírico de apoyo** para la Monografía sobre Estilos de Aprendizaje VAK (Visual, Auditivo y Kinestésico), elaborada por **Christhian Keim (2025)**.
+Esta aplicación web fue desarrollada como **instrumento empírico de apoyo** para la Monografía sobre Estilos de Aprendizaje VAK (Visual, Auditivo y Kinestésico), elaborada por **Christhian Keim (2026)**.
 
 ## 🚀 Características Principales
 
@@ -41,4 +41,4 @@ Esta aplicación web fue desarrollada como **instrumento empírico de apoyo** pa
 - [Monografía Original (Formato HTML)](../monografia.html)
 
 ---
-*Proyecto Académico - 2025*
+*Proyecto Académico - 2026*
