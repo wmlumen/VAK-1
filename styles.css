@@ -306,6 +306,31 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
     }
 }
 
+/* Mobile: tipografía y touch targets */
+@media (max-width: 480px) {
+    html, body { font-size: 17px; }
+    .app-header { padding: 10px; }
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.2rem; }
+    .btn { padding: 14px 18px; font-size: 1rem; width: 100%; }
+    .btn-large { padding: 16px 22px; font-size: 1.05rem; }
+    .glass-input { font-size: 1rem; padding: 14px 15px; }
+    .form-fieldset { padding: 18px; }
+    .wizard-card { padding: 18px; }
+    .question-title { font-size: 1.1rem; }
+    .option-card { padding: 16px; font-size: 1rem; min-height: 52px; }
+    .tab-btn { padding: 12px 14px; font-size: 1rem; }
+    .lang-btn { padding: 10px 12px; }
+    .dashboard-toolbar { flex-direction: column; align-items: stretch; }
+    .dashboard-actions { flex-direction: column; width: 100%; }
+    .dashboard-actions .btn { width: 100%; }
+    .stats-layout, .students-dashboard-section, .mode-selection { flex-direction: column; }
+    .qr-compact-card img { width: 140px; height: 140px; }
+    #qr-overlay img { width: min(92vw, 420px); }
+    /* Impide zoom accidental iOS */
+    select, input, textarea { font-size: 16px; }
+}
+
 /* Buttons */
 .btn { padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.3s ease; }
 .btn-large { padding: 15px 40px; font-size: 1.1rem; width: 100%; max-width: 350px; }
