@@ -39,38 +39,39 @@ body {
 .blob-3 { width: 350px; height: 350px; background: var(--color-k); bottom: -100px; left: 20%; animation-delay: -10s; }
 @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(50px, 80px) scale(1.1); } }
 
-/* Tabs Navigation & Hamburger */
-.hamburger-menu {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    background: rgba(0,0,0,0.5);
-    padding: 10px;
-    border-radius: 8px;
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-.hamburger-menu span {
-    width: 25px;
-    height: 3px;
-    background: white;
-    border-radius: 3px;
-    transition: all 0.3s ease;
+/* Menú Horizontal (Reemplaza al Hamburguesa) */
+.hamburger-btn {
+    display: none !important; /* Ocultamos el botón hamburguesa */
 }
 
-.tabs-nav {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    background: rgba(0,0,0,0.4);
-    padding: 10px;
-    border-radius: 30px;
+#mobile-nav {
+    position: relative;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(10px);
-    z-index: 999;
+    border-bottom: 1px solid var(--card-border);
+    padding: 15px 10px;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
+
+#mobile-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap; /* En móviles pequeños se acomoda en 2 líneas si es necesario */
+    justify-content: center;
+    align-items: center;
+}
+
+#mobile-nav li {
+    margin: 0;
+}
+
 .tab-btn {
     background: transparent;
     border: none;
@@ -90,7 +91,7 @@ body {
 }
 
 @media (max-width: 768px) {
-    .hamburger-menu { display: flex; }
+    .hamburger-menu { display: none; }
     .tabs-nav {
         flex-direction: column;
         position: absolute;
@@ -257,7 +258,7 @@ canvas { max-width: 100%; }
 
 .lang-selector {
     position: absolute;
-    top: 20px;
+    top: 75px;
     left: 20px;
     z-index: 100;
 }
