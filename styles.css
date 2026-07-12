@@ -14,6 +14,11 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
@@ -22,7 +27,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-x: hidden;
     position: relative;
     padding-top: 20px;
     padding-bottom: 40px;
