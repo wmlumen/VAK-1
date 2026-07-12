@@ -39,15 +39,37 @@ body {
 .blob-3 { width: 350px; height: 350px; background: var(--color-k); bottom: -100px; left: 20%; animation-delay: -10s; }
 @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(50px, 80px) scale(1.1); } }
 
-/* Tabs Navigation */
+/* Tabs Navigation & Hamburger */
+.hamburger-menu {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 8px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+.hamburger-menu span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
 .tabs-nav {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.4);
     padding: 10px;
     border-radius: 30px;
     backdrop-filter: blur(10px);
+    z-index: 999;
 }
 .tab-btn {
     background: transparent;
@@ -65,6 +87,28 @@ body {
     background: var(--accent);
     color: white;
     box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+}
+
+@media (max-width: 768px) {
+    .hamburger-menu { display: flex; }
+    .tabs-nav {
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 15px;
+        display: none; /* Hidden by default on mobile */
+    }
+    .tabs-nav.open {
+        display: flex;
+        animation: fadeIn 0.3s ease;
+    }
+    .app-container {
+        margin-top: 50px;
+    }
 }
 
 /* Main App Container */

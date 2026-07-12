@@ -37,9 +37,18 @@ let currentQuestionIndex = 0;
 let currentQuestions = [];
 let answers = [];
 
+// Constante en la nube para persistencia global
+const CLOUD_API_URL = "https://jsonblob.com/api/jsonBlob/019f56c1-ff28-78c0-96e4-7b245e1c6524";
+
+// --- HAMBURGER MENU ---
+document.getElementById('hamburger-btn').addEventListener('click', () => {
+    document.getElementById('mobile-nav').classList.toggle('open');
+});
+
 // --- NAVEGACIÓN TABS ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
+        document.getElementById('mobile-nav').classList.remove('open');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -218,15 +227,33 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     showScreen('welcome');
 });
 
-// --- LOCALSTORAGE DATABASE ---
-function getDB() {
-    const data = localStorage.getItem('vak_db');
-    return data ? JSON.parse(data) : [];
+// --- CLOUD DATABASE (JSONBlob) ---
+async function getDB() {
+    try {
+        const res = await fetch(CLOUD_API_URL);
+        const data = await res.json();
+        // Fallback al formato antiguo si el servidor devuelve arreglo, pero ahora será objeto
+        if (Array.isArray(data)) return data; 
+        if (data && data.results) return data.results;
+        return [];
+    } catch (e) {
+        console.error("Error leyendo de la nube, usando local", e);
+        const local = localStorage.getItem('vak_db');
+        return local ? JSON.parse(local) : [];
+    }
 }
 
-function saveResultToDB(name, group, gender, v, a, k, mainStyle) {
-    const db = getDB();
-    db.push({
+async function saveResultToDB(name, group, gender, v, a, k, mainStyle) {
+    let currentData = { results: [], comments: [] };
+    try {
+        const res = await fetch(CLOUD_API_URL);
+        currentData = await res.json();
+        if (Array.isArray(currentData)) currentData = { results: currentData, comments: [] }; // Migración
+    } catch (e) {}
+
+    if (!currentData.results) currentData.results = [];
+
+    currentData.results.push({
         id: Date.now(),
         name: name,
         group: group,
@@ -234,7 +261,20 @@ function saveResultToDB(name, group, gender, v, a, k, mainStyle) {
         v: v, a: a, k: k,
         mainStyle: mainStyle
     });
-    localStorage.setItem('vak_db', JSON.stringify(db));
+    
+    // Backup local
+    localStorage.setItem('vak_db', JSON.stringify(currentData.results));
+
+    // Guardar en la nube
+    try {
+        await fetch(CLOUD_API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentData)
+        });
+    } catch (e) {
+        console.error("Error guardando en la nube", e);
+    }
 }
 
 // --- ESTADÍSTICAS GRUPALES (CHART.JS) ---
@@ -242,8 +282,13 @@ let chartPieInstance = null;
 let chartBarInstance = null;
 let chartPartInstance = null;
 
-function loadStats() {
-    const db = getDB();
+async function loadStats() {
+    // Se muestra estado de carga si lo deseas, acá bloquea hasta descargar
+    document.getElementById('no-data-msg').innerText = "Cargando datos de la nube...";
+    document.getElementById('no-data-msg').classList.remove('hidden');
+    document.getElementById('stats-container').classList.add('hidden');
+
+    const db = await getDB();
     const selector = document.getElementById('group-selector');
     const container = document.getElementById('stats-container');
     const noData = document.getElementById('no-data-msg');
@@ -261,6 +306,7 @@ function loadStats() {
 
     if (db.length === 0) {
         container.classList.add('hidden');
+        noData.innerText = "Aún no hay datos para mostrar en la nube.";
         noData.classList.remove('hidden');
         return;
     }
@@ -356,34 +402,65 @@ function drawCharts(selectedGroup, db) {
 }
 
 // --- COMENTARIOS ---
-document.getElementById('submit-comment-btn').addEventListener('click', () => {
+document.getElementById('submit-comment-btn').addEventListener('click', async () => {
     const name = document.getElementById('comment-name').value.trim();
     const text = document.getElementById('comment-text').value.trim();
     if (!name || !text) return alert("Completa nombre y comentario.");
+    
+    document.getElementById('submit-comment-btn').innerText = "Guardando...";
 
-    const comments = getComments();
-    comments.push({
+    let currentData = { results: [], comments: [] };
+    try {
+        const res = await fetch(CLOUD_API_URL);
+        currentData = await res.json();
+        if (Array.isArray(currentData)) currentData = { results: currentData, comments: [] };
+    } catch (e) {}
+
+    if (!currentData.comments) currentData.comments = [];
+
+    currentData.comments.push({
         name: name,
         text: text,
         date: new Date().toLocaleString()
     });
-    localStorage.setItem('vak_comments', JSON.stringify(comments));
     
+    // Backup local
+    localStorage.setItem('vak_comments', JSON.stringify(currentData.comments));
+    
+    try {
+        await fetch(CLOUD_API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentData)
+        });
+    } catch (e) {}
+
     document.getElementById('comment-name').value = '';
     document.getElementById('comment-text').value = '';
+    document.getElementById('submit-comment-btn').innerText = "Publicar Comentario";
     loadComments();
 });
 
-function getComments() {
-    const data = localStorage.getItem('vak_comments');
-    return data ? JSON.parse(data) : [];
+async function getComments() {
+    try {
+        const res = await fetch(CLOUD_API_URL);
+        const data = await res.json();
+        if (data && data.comments) return data.comments;
+        return [];
+    } catch (e) {
+        const local = localStorage.getItem('vak_comments');
+        return local ? JSON.parse(local) : [];
+    }
 }
 
-function loadComments() {
+async function loadComments() {
     const list = document.getElementById('comments-list');
-    list.innerHTML = '';
-    const comments = getComments().reverse(); // Nuevos primero
+    list.innerHTML = '<p style="text-align:center; color:gray;">Cargando comentarios de la nube...</p>';
+    
+    const commentsData = await getComments();
+    const comments = commentsData.reverse(); // Nuevos primero
 
+    list.innerHTML = '';
     if (comments.length === 0) {
         list.innerHTML = '<p style="text-align:center; color:gray;">Sé el primero en comentar.</p>';
         return;
