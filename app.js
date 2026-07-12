@@ -26,6 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
     initWizard();
 });
 
+// --- NAVEGACIÓN POR PESTAÑAS ---
+window.switchTab = function(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (!btn.classList.contains('lang-btn') && !btn.hasAttribute('href')) {
+            btn.classList.remove('active');
+        }
+    });
+    document.getElementById(tabId).classList.add('active');
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+};
+
 // Dropdown Logic
 function toggleLangMenu() {
     const menu = document.getElementById('lang-menu');
