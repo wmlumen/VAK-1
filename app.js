@@ -5,12 +5,14 @@ let currentQuestions = [];
 let answers = [];
 let currentMode = 'adults';
 let currentLang = 'es';
+const QUESTION_VERSION = '1.0.1';
 
-// Constante en la nube para persistencia global
-const CLOUD_API_URL = "https://jsonblob.com/api/jsonBlob/019f56c1-ff28-78c0-96e4-7b245e1c6524";
+// Persistencia local segura (sin nube pública insegura)
+const DB_KEY = 'vak_results';
+const COMMENTS_KEY = 'vak_comments';
+const CONSENT_KEY = 'vak_consent';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Detectar idioma
     let langToSet = localStorage.getItem('vak_lang');
     if (!langToSet) {
         langToSet = 'es';
@@ -24,7 +26,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     changeLang(langToSet);
     await loadCountries();
     initWizard();
+    loadComments();
 });
+
+// --- UTILIDADES ---
+function shuffle(array) {
+    const a = [...array];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function generateId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+}
+
+function t(key) {
+    return window.i18n[currentLang]?.ui?.[key] || key;
+}
+
+function getStyleLabel(key) {
+    const map = {
+        'V': window.i18n[currentLang]?.ui?.styleVisual || 'Visual',
+        'A': window.i18n[currentLang]?.ui?.styleAuditory || 'Auditivo',
+        'K': window.i18n[currentLang]?.ui?.styleKinesthetic || 'Kinestésico'
+    };
+    if (key && key.startsWith('Multimodal')) return window.i18n[currentLang]?.ui?.styleMultimodal || 'Multimodal';
+    return map[key] || key || '—';
+}
 
 // --- NAVEGACIÓN POR PESTAÑAS ---
 window.switchTab = function(tabId) {
@@ -42,7 +76,7 @@ window.switchTab = function(tabId) {
         targetTab.classList.remove('hidden');
         targetTab.classList.add('active');
     }
-    
+
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
     }
@@ -70,19 +104,15 @@ function changeLang(lang) {
     if (!window.i18n[lang]) return;
     currentLang = lang;
     document.documentElement.lang = lang;
-    
-    // Save preference
+
     localStorage.setItem('vak_lang', lang);
-    
-    // Update button text
+
     const btn = document.getElementById('lang-btn');
     if (btn) btn.innerHTML = `${lang.toUpperCase()} ▾`;
-    
-    // Close menu
+
     document.getElementById('lang-menu')?.classList.add('hidden');
     if (btn) btn.setAttribute('aria-expanded', 'false');
 
-    // Actualizar todos los elementos con data-i18n
     const elements = document.querySelectorAll('[data-i18n]');
     elements.forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -97,35 +127,51 @@ function changeLang(lang) {
         }
     });
 
-    // Si estamos en plena prueba, actualizar los textos de la pregunta actual
     if (document.getElementById('question-screen') && document.getElementById('question-screen').classList.contains('active')) {
         currentQuestions = currentMode === 'kids' ? window.i18n[currentLang].questionsKids : window.i18n[currentLang].questionsAdults;
         renderQuestion();
     }
+
+    if (document.getElementById('tab-stats') && document.getElementById('tab-stats').classList.contains('active')) {
+        loadStats();
+    }
 }
 
+// --- IDIOMA Y PAÍSES ---
 async function loadCountries() {
     const select = document.getElementById('user-country');
-    const defaultOpt = document.createElement('option');
-    defaultOpt.value = "";
-    defaultOpt.disabled = true;
-    defaultOpt.selected = true;
-    defaultOpt.setAttribute('data-i18n', 'selectCountryDef');
-    defaultOpt.innerText = window.i18n[currentLang].ui.selectCountryDef;
-    select.innerHTML = '';
-    select.appendChild(defaultOpt);
+    if (!select) return;
+
+    select.innerHTML = '<option value="" disabled selected>Cargando países...</option>';
 
     let countriesLoaded = false;
+
+    const fetchWithTimeout = (url, timeoutMs = 5000) => {
+        return Promise.race([
+            fetch(url),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+        ]);
+    };
+
     try {
-        const res = await fetch('https://restcountries.com/v3.1/all?fields=name');
+        const res = await fetchWithTimeout('https://restcountries.com/v3.1/all?fields=name');
         const data = await res.json();
-        
-        if (Array.isArray(data)) {
-            data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-            data.forEach(c => {
+
+        if (Array.isArray(data) && data.length > 0) {
+            const sorted = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+            select.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.disabled = true;
+            defaultOpt.selected = true;
+            defaultOpt.setAttribute('data-i18n', 'selectCountryDef');
+            defaultOpt.innerText = window.i18n[currentLang].ui.selectCountryDef || '-- Elige tu país --';
+            select.appendChild(defaultOpt);
+
+            sorted.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.name.common;
-                opt.innerText = c.name.common; 
+                opt.innerText = c.name.common;
                 select.appendChild(opt);
             });
             countriesLoaded = true;
@@ -133,9 +179,16 @@ async function loadCountries() {
     } catch (e) {
         console.error("Error cargando países", e);
     }
-    
-    // Lista de respaldo en caso de que la API falle
+
     if (!countriesLoaded) {
+        select.innerHTML = '';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.disabled = true;
+        defaultOpt.selected = true;
+        defaultOpt.innerText = '-- Elige tu país --';
+        select.appendChild(defaultOpt);
+
         const fallback = ["Argentina", "Bolivia", "Brasil", "Canadá", "Chile", "Colombia", "Costa Rica", "Cuba", "Ecuador", "El Salvador", "España", "Estados Unidos", "Guatemala", "Honduras", "México", "Nicaragua", "Panamá", "Paraguay", "Perú", "Puerto Rico", "República Dominicana", "Uruguay", "Venezuela", "Otro"];
         fallback.forEach(c => {
             const opt = document.createElement('option');
@@ -144,30 +197,28 @@ async function loadCountries() {
         });
     }
 
-    // Populate link-country-select (Teacher generator) by cloning the options from user-country
     const linkSelect = document.getElementById('link-country-select');
-    linkSelect.innerHTML = '<option value="" disabled selected>-- Detectando País... --</option>';
-    for (let i = 1; i < select.options.length; i++) { // Skip index 0 ("Cargando países")
-        const opt = document.createElement('option');
-        opt.value = select.options[i].value;
-        opt.innerText = select.options[i].innerText;
-        linkSelect.appendChild(opt);
+    if (linkSelect) {
+        linkSelect.innerHTML = '<option value="" disabled selected>-- Elige tu país --</option>';
+        for (let i = 1; i < select.options.length; i++) {
+            const opt = document.createElement('option');
+            opt.value = select.options[i].value;
+            opt.innerText = select.options[i].innerText;
+            linkSelect.appendChild(opt);
+        }
     }
 
-    // Auto-detectar país por IP y seleccionarlo en ambos formularios
     try {
-        const ipRes = await fetch('https://ipapi.co/json/');
+        const ipRes = await fetchWithTimeout('https://ipapi.co/json/', 4000);
         const ipData = await ipRes.json();
-        
-        // Re-establecer default en caso de que falle
-        linkSelect.options[0].innerText = "-- Elige tu país --";
-        
-        if (ipData && ipData.country_name) {
+
+        if (ipData && ipData.country_name && linkSelect) {
+            linkSelect.options[0].innerText = "-- Elige tu país --";
             let found = false;
             for (let i = 0; i < select.options.length; i++) {
                 if (select.options[i].value === ipData.country_name || select.options[i].value.includes(ipData.country_name)) {
                     select.selectedIndex = i;
-                    linkSelect.selectedIndex = i; // Seleccionar también en Docente
+                    linkSelect.selectedIndex = i;
                     found = true;
                     break;
                 }
@@ -178,7 +229,7 @@ async function loadCountries() {
                 opt.innerText = ipData.country_name;
                 select.appendChild(opt);
                 select.selectedIndex = select.options.length - 1;
-                
+
                 const optLink = document.createElement('option');
                 optLink.value = ipData.country_name;
                 optLink.innerText = ipData.country_name;
@@ -187,23 +238,18 @@ async function loadCountries() {
             }
         }
     } catch (e) {
-        linkSelect.options[0].innerText = "-- Elige tu país --";
+        if (linkSelect && linkSelect.options[0]) linkSelect.options[0].innerText = "-- Elige tu país --";
         console.error("Error detectando IP", e);
     }
 }
 
-// Inicializar idioma y países
-// Inicializar idioma
-changeLang('es');
-
-
 // --- LÓGICA DEL GENERADOR DE ENLACES (DOCENTES) ---
-document.getElementById('generate-link-btn').addEventListener('click', async () => {
+document.getElementById('generate-link-btn')?.addEventListener('click', async () => {
     const groupInput = document.getElementById('link-group');
     const group = groupInput.value.trim().toUpperCase();
     const country = document.getElementById('link-country-select').value;
     const errorMsg = document.getElementById('link-group-error');
-    
+
     const regex = /^[A-Z]{3}[0-9]{3}$/;
     if (!regex.test(group)) {
         errorMsg.classList.remove('hidden');
@@ -212,64 +258,61 @@ document.getElementById('generate-link-btn').addEventListener('click', async () 
     } else {
         errorMsg.classList.add('hidden');
     }
-    
+
     if (!country) return alert("Por favor selecciona un país para el grupo.");
 
     document.getElementById('generate-link-btn').innerText = "Validando...";
-    
-    // Verificar si el grupo ya existe
+
     try {
-        const db = await getDB();
+        const db = getAllResults();
         const existingGroups = [...new Set(db.map(item => item.group))];
         if (existingGroups.includes(group)) {
-            const confirmAdd = confirm("⚠️ ATENCIÓN: Ya existen resultados guardados bajo el grupo '" + group + "'.\n\nSi creas este enlace, los nuevos alumnos se sumarán al grupo existente.\n\n¿Deseas continuar?");
+            const confirmAdd = confirm(`ATENCIÓN: Ya existen resultados guardados bajo el grupo '${group}'.\n\nSi creas este enlace, los nuevos alumnos se sumarán al grupo existente en este dispositivo.\n\n¿Deseas continuar?`);
             if (!confirmAdd) {
                 document.getElementById('generate-link-btn').innerText = "Generar Enlace Seguro";
                 return;
             }
         }
     } catch (e) {
-        console.error("No se pudo validar el grupo, procediendo de todos modos.");
+        console.error("No se pudo validar el grupo, procediendo de todos modos.", e);
     }
-    
+
     document.getElementById('generate-link-btn').innerText = "Generar enlace";
-    
+
     let url = window.location.origin + window.location.pathname + "?group=" + encodeURIComponent(group);
     if (country) url += "&country=" + encodeURIComponent(country);
-    
+
     document.getElementById('generated-link').value = url;
     document.getElementById('link-result-container').classList.remove('hidden');
-    document.getElementById('copy-success-msg').style.display = 'none'; // reset
-    
-    // Guardar para futuros usos
+    document.getElementById('copy-success-msg').style.display = 'none';
+
     localStorage.setItem('vak_last_group', group);
     localStorage.setItem('vak_last_country', country);
     checkLastGroupLink();
 });
 
-document.getElementById('copy-link-btn').addEventListener('click', () => {
+document.getElementById('copy-link-btn')?.addEventListener('click', () => {
     const linkInput = document.getElementById('generated-link');
     linkInput.select();
-    document.execCommand('copy'); // Legacy fallback
+    document.execCommand('copy');
     if (navigator.clipboard) navigator.clipboard.writeText(linkInput.value);
-    
+
     const btn = document.getElementById('copy-link-btn');
     btn.innerText = "✅ Copiado";
     document.getElementById('copy-success-msg').style.display = 'block';
-    
+
     setTimeout(() => {
         btn.innerText = "📋 Copiar";
         document.getElementById('copy-success-msg').style.display = 'none';
     }, 4000);
 });
 
-document.getElementById('whatsapp-link-btn').addEventListener('click', () => {
+document.getElementById('whatsapp-link-btn')?.addEventListener('click', () => {
     const url = document.getElementById('generated-link').value;
-    const text = `¡Hola! Por favor completa tu Test de Estilos de Aprendizaje VAK ingresando a este enlace (ya tiene nuestro código de grupo configurado):\n\n${url}`;
+    const text = `¡Hola! Por favor completa tu Test de Estilos de Aprendizaje VAK ingresando a este enlace:\n\n${url}`;
     window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
 });
 
-// Chequear si hay un grupo previo guardado
 function checkLastGroupLink() {
     const lastGroup = localStorage.getItem('vak_last_group');
     const linkEl = document.getElementById('use-last-code-link');
@@ -324,13 +367,21 @@ function initWizard() {
         }
         advanceToStep2(groupParam.toUpperCase(), countryParam || "Paraguay");
     }
+
+    if (localStorage.getItem(CONSENT_KEY)) {
+        const checkbox = document.getElementById('consent-checkbox');
+        if (checkbox) checkbox.checked = true;
+        updateContinueBtn();
+    }
 }
 
 function advanceToStep2(groupVal, countryVal) {
+    const step1 = document.getElementById('wizard-step-1');
     const step2 = document.getElementById('wizard-step-2');
     const summaryTag = document.getElementById('step-1-summary');
     const intro = document.getElementById('welcome-intro');
 
+    if (step1) step1.classList.add('hidden-step');
     if (summaryTag) summaryTag.innerText = `✅ ${groupVal} – ${countryVal}`;
     if (step2) step2.classList.remove('hidden-step');
     if (intro) intro.style.display = 'none';
@@ -359,30 +410,48 @@ document.getElementById('step-2-back')?.addEventListener('click', () => {
     document.getElementById('user-group')?.focus();
 });
 
-// 1. Validar Usuario y Grupo
+function updateContinueBtn() {
+    const checkbox = document.getElementById('consent-checkbox');
+    const btn = document.getElementById('continue-btn');
+    if (checkbox && btn) {
+        btn.disabled = !checkbox.checked;
+        btn.style.opacity = checkbox.checked ? '1' : '0.5';
+        btn.style.cursor = checkbox.checked ? 'pointer' : 'not-allowed';
+    }
+}
+
+document.getElementById('consent-checkbox')?.addEventListener('change', updateContinueBtn);
+
 document.getElementById('continue-btn').addEventListener('click', () => {
+    const checkbox = document.getElementById('consent-checkbox');
+    if (!checkbox || !checkbox.checked) {
+        alert("Debes aceptar el aviso de privacidad para continuar.");
+        return;
+    }
+
+    localStorage.setItem(CONSENT_KEY, 'true');
+
     const nameVal = document.getElementById('user-name').value.trim();
     const groupVal = document.getElementById('user-group').value.trim().toUpperCase();
     const genderVal = document.getElementById('user-gender').value;
     const ageVal = document.getElementById('user-age').value;
     const countryVal = document.getElementById('user-country').value || "No especificado";
     const errorMsg = document.getElementById('group-error');
-    
-    // Regex: exactly 3 letters + 3 numbers
+
     const regex = /^[a-zA-Z]{3}[0-9]{3}$/;
-    
+
     if (!nameVal || !groupVal || !ageVal) {
         alert(currentLang === 'es' ? "Por favor completa Nombre, Grupo y Edad." : "Please fill out Name, Group, and Age.");
         return;
     }
-    
+
     if (!regex.test(groupVal)) {
         errorMsg.classList.remove('hidden');
         return;
     } else {
         errorMsg.classList.add('hidden');
     }
-    
+
     const ageNum = parseInt(ageVal);
     if (isNaN(ageNum) || ageNum < 6 || ageNum > 99) {
         document.getElementById('age-error').classList.remove('hidden');
@@ -390,13 +459,12 @@ document.getElementById('continue-btn').addEventListener('click', () => {
     } else {
         document.getElementById('age-error').classList.add('hidden');
     }
-    
+
     currentUser.name = nameVal;
     currentUser.group = groupVal.toUpperCase();
-    currentUser.gender = genderVal; // This string depends on the language! Let's standardize it.
-    // Estandarizar el género internamente en español:
+
     if (!genderVal) {
-        currentUser.gender = "Otro"; // Default for optional
+        currentUser.gender = "Otro";
     } else if (genderVal.includes("Masculino") || genderVal.includes("Male") || genderVal.includes("男") || genderVal.includes("Мужской") || genderVal.includes("Kuimba'e")) {
         currentUser.gender = "Masculino";
     } else if (genderVal.includes("Femenino") || genderVal.includes("Female") || genderVal.includes("女") || genderVal.includes("Женский") || genderVal.includes("Kuña")) {
@@ -405,23 +473,21 @@ document.getElementById('continue-btn').addEventListener('click', () => {
         currentUser.gender = "Otro";
     }
 
-    currentUser.age = parseInt(ageVal);
+    currentUser.age = parseInt(ageNum);
     currentUser.country = countryVal;
-    
+
     document.getElementById('display-name').innerText = nameVal;
-    
-    // Iniciar directamente el cuestionario según la edad ingresada (sin clic intermedio redundante)
-    const mode = ageNum <= 12 ? 'kids' : 'adults';
-    startTest(mode);
+
+    showScreen('start');
 });
 
-// 2. Iniciar Test
-document.getElementById('start-kids-btn').addEventListener('click', () => startTest('kids'));
-document.getElementById('start-adults-btn').addEventListener('click', () => startTest('adults'));
+document.getElementById('start-kids-btn')?.addEventListener('click', () => startTest('kids'));
+document.getElementById('start-adults-btn')?.addEventListener('click', () => startTest('adults'));
 
 function startTest(mode) {
     currentMode = mode;
-    currentQuestions = mode === 'kids' ? window.i18n[currentLang].questionsKids : window.i18n[currentLang].questionsAdults;
+    const source = mode === 'kids' ? window.i18n[currentLang].questionsKids : window.i18n[currentLang].questionsAdults;
+    currentQuestions = shuffle(source);
     currentQuestionIndex = 0;
     answers = new Array(currentQuestions.length).fill(null);
     showScreen('question');
@@ -436,22 +502,22 @@ function renderQuestion() {
 
     const optContainer = document.getElementById('options-container');
     optContainer.innerHTML = '';
-    
+
     let transitionTimeout = null;
-    
-    question.options.forEach((opt) => {
+
+    question.o.forEach((opt) => {
         const div = document.createElement('div');
         div.className = 'option-card';
         div.innerText = opt.t;
         if (answers[currentQuestionIndex] === opt.s) div.classList.add('selected');
-        
+
         div.addEventListener('click', (e) => {
-            if (transitionTimeout) return; // Evitar doble clic
-            
+            if (transitionTimeout) return;
+
             optContainer.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
             e.target.classList.add('selected');
             answers[currentQuestionIndex] = opt.s;
-            
+
             transitionTimeout = setTimeout(() => {
                 transitionTimeout = null;
                 nextQuestion();
@@ -465,7 +531,7 @@ function renderQuestion() {
     else prevBtn.classList.remove('hidden');
 }
 
-document.getElementById('prev-btn').addEventListener('click', () => {
+document.getElementById('prev-btn')?.addEventListener('click', () => {
     if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(); }
 });
 
@@ -477,19 +543,26 @@ function nextQuestion() {
     }
 }
 
+// --- CÁLCULO DE RESULTADOS ROBUSTO ---
 function calculateResults() {
     const counts = { V: 0, A: 0, K: 0 };
     answers.forEach(ans => { if (ans) counts[ans]++; });
-    
-    // Base math on actual answers to avoid < 100% if someone skips via bugs
+
     const answeredTotal = counts.V + counts.A + counts.K;
-    const total = answeredTotal > 0 ? answeredTotal : 1; 
-    
+
+    if (answeredTotal === 0) {
+        alert("No has seleccionado ninguna respuesta. Por favor vuelve a intentarlo.");
+        currentQuestionIndex = 0;
+        renderQuestion();
+        return;
+    }
+
+    const total = answeredTotal;
+
     let pV = Math.round((counts.V / total) * 100);
     let pA = Math.round((counts.A / total) * 100);
     let pK = Math.round((counts.K / total) * 100);
 
-    // Forzar que la sumatoria sea exactamente 100% corrigiendo desfases de redondeo
     const sum = pV + pA + pK;
     if (sum > 0 && sum !== 100) {
         const diff = 100 - sum;
@@ -500,13 +573,13 @@ function calculateResults() {
 
     let max = Math.max(pV, pA, pK);
     const dominants = [];
-    if (pV === max) dominants.push("Visual");
-    if (pA === max) dominants.push("Auditivo");
-    if (pK === max) dominants.push("Kinestésico");
-    
-    let dominantName = dominants.length > 1 ? "Multimodal (" + dominants.join(" - ") + ")" : dominants[0];
+    if (pV === max) dominants.push("V");
+    if (pA === max) dominants.push("A");
+    if (pK === max) dominants.push("K");
 
-    // Mostrar UI
+    const dominantKey = dominants.length > 1 ? 'Multimodal' : dominants[0];
+    const dominantName = getStyleLabel(dominantKey);
+
     document.getElementById('res-name').innerText = currentUser.name;
     document.getElementById('res-group').innerText = currentUser.group;
     document.getElementById('res-gender').innerText = currentUser.gender;
@@ -528,86 +601,116 @@ function calculateResults() {
 
     const descEl = document.getElementById('result-description');
     if (dominants.length > 1) {
-        descEl.innerHTML = "<strong>¡Tienes un estilo equilibrado!</strong> Tu cerebro es muy flexible y procesa de múltiples formas.";
+        descEl.innerHTML = `<strong>${t('resBalanced') || '¡Tienes un estilo equilibrado!'}</strong> Tu cerebro procesa de múltiples formas.`;
     } else {
-        if (dominantName === "Visual") descEl.innerHTML = "<strong>Tu punto fuerte es la visión.</strong> Procesas muy bien las imágenes, mapas y esquemas.";
-        else if (dominantName === "Auditivo") descEl.innerHTML = "<strong>Tu punto fuerte es la escucha.</strong> Entiendes genial a través de explicaciones orales y debates.";
-        else if (dominantName === "Kinestésico") descEl.innerHTML = "<strong>Tu punto fuerte es el hacer.</strong> Tu cuerpo necesita involucrarse física y espacialmente.";
+        if (dominantKey === "V") descEl.innerHTML = `<strong>${t('resVisual') || 'Tu punto fuerte es la visión.'}</strong> Procesas muy bien las imágenes, mapas y esquemas.`;
+        else if (dominantKey === "A") descEl.innerHTML = `<strong>${t('resAuditory') || 'Tu punto fuerte es la escucha.'}</strong> Entiendes genial a través de explicaciones orales y debates.`;
+        else if (dominantKey === "K") descEl.innerHTML = `<strong>${t('resKinesthetic') || 'Tu punto fuerte es el hacer.'}</strong> Tu cuerpo necesita involucrarse física y espacialmente.`;
     }
 
-    // GUARDAR EN LOCAL Y NUBE
-    saveResultToDB(currentUser.name, currentUser.group, currentUser.gender, currentUser.age, currentUser.country, pV, pA, pK, dominants[0]);
+    saveResultToDB(currentUser.name, currentUser.group, currentUser.gender, currentUser.age, currentUser.country, pV, pA, pK, dominantKey, QUESTION_VERSION);
 }
 
-document.getElementById('download-btn').addEventListener('click', () => {
+document.getElementById('download-btn')?.addEventListener('click', () => {
     const captureArea = document.getElementById('capture-area');
-    html2canvas(captureArea, { backgroundColor: '#1e293b' }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `Resultado_VAK_${currentUser.name}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    });
+    if (typeof html2canvas !== 'undefined') {
+        html2canvas(captureArea, { backgroundColor: '#1e293b' }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Resultado_VAK_${currentUser.name.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(err => {
+            console.error("Error generando imagen", err);
+            alert("No se pudo generar la imagen. Por favor usa la opción de impresión del navegador.");
+        });
+    } else {
+        alert("Librería de exportación no cargada.");
+    }
 });
 
-document.getElementById('restart-btn').addEventListener('click', () => {
+document.getElementById('restart-btn')?.addEventListener('click', () => {
     document.getElementById('user-name').value = '';
     document.getElementById('user-group').value = '';
     document.getElementById('user-gender').value = '';
     document.getElementById('user-age').value = '';
     document.getElementById('user-country').value = '';
+    document.getElementById('consent-checkbox').checked = false;
+    updateContinueBtn();
     showScreen('welcome');
 });
 
-// --- CLOUD DATABASE (JSONBlob) ---
-async function getDB() {
+// --- PERSISTENCIA LOCAL SEGURA ---
+function getAllResults() {
     try {
-        const res = await fetch(CLOUD_API_URL);
-        const data = await res.json();
-        // Fallback al formato antiguo si el servidor devuelve arreglo, pero ahora será objeto
-        if (Array.isArray(data)) return data; 
-        if (data && data.results) return data.results;
-        return [];
+        const raw = localStorage.getItem(DB_KEY);
+        const data = raw ? JSON.parse(raw) : [];
+        return Array.isArray(data) ? data : [];
     } catch (e) {
-        console.error("Error leyendo de la nube, usando local", e);
-        const local = localStorage.getItem('vak_db');
-        return local ? JSON.parse(local) : [];
+        console.error("Error leyendo resultados locales", e);
+        return [];
     }
 }
 
-async function saveResultToDB(name, group, gender, age, country, v, a, k, mainStyle) {
-    let currentData = { results: [], comments: [] };
-    try {
-        const res = await fetch(CLOUD_API_URL);
-        currentData = await res.json();
-        if (Array.isArray(currentData)) currentData = { results: currentData, comments: [] }; // Migración
-    } catch (e) {}
-
-    if (!currentData.results) currentData.results = [];
-
-    currentData.results.push({
-        id: Date.now().toString(),
-        name: name,
-        group: group,
-        gender: gender,
-        age: age,
-        country: country,
-        v: v, a: a, k: k,
-        mainStyle: mainStyle
+function saveResultToDB(name, group, gender, age, country, v, a, k, dominantKey, questionVersion) {
+    const results = getAllResults();
+    results.push({
+        id: generateId(),
+        name,
+        group,
+        gender,
+        age,
+        country,
+        v, a, k,
+        dominantKey,
+        questionVersion,
+        createdAt: new Date().toISOString()
     });
-    
-    // Backup local
-    localStorage.setItem('vak_db', JSON.stringify(currentData.results));
+    localStorage.setItem(DB_KEY, JSON.stringify(results));
+}
 
-    // Guardar en la nube
-    try {
-        await fetch(CLOUD_API_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(currentData)
-        });
-    } catch (e) {
-        console.error("Error guardando en la nube", e);
-    }
+function exportData() {
+    const results = getAllResults();
+    const comments = getCommentsData();
+    const payload = {
+        version: QUESTION_VERSION,
+        exportedAt: new Date().toISOString(),
+        results,
+        comments
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vak_export_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const payload = JSON.parse(e.target.result);
+            if (!payload.results || !Array.isArray(payload.results)) {
+                throw new Error("Formato inválido: se requiere 'results' como array.");
+            }
+            const existing = getAllResults();
+            const merged = [...existing, ...payload.results];
+            localStorage.setItem(DB_KEY, JSON.stringify(merged));
+
+            if (payload.comments && Array.isArray(payload.comments)) {
+                const currentComments = getCommentsData();
+                const mergedComments = [...currentComments, ...payload.comments];
+                localStorage.setItem(COMMENTS_KEY, JSON.stringify(mergedComments));
+            }
+
+            alert(`Importados ${payload.results.length} resultados correctamente.`);
+            loadStats();
+        } catch (err) {
+            alert("Error al importar: " + err.message);
+        }
+    };
+    reader.readAsText(file);
 }
 
 // --- ESTADÍSTICAS GRUPALES (CHART.JS) ---
@@ -618,26 +721,28 @@ let chartGenderInstance = null;
 let chartAgeStyleInstance = null;
 let chartAgeDistInstance = null;
 
-// Impresión del Reporte
-document.getElementById('print-stats-btn').addEventListener('click', () => {
+document.getElementById('print-stats-btn')?.addEventListener('click', () => {
     window.print();
 });
 
-async function loadStats() {
-    // Se muestra estado de carga si lo deseas, acá bloquea hasta descargar
-    document.getElementById('no-data-msg').innerText = "Cargando datos de la nube...";
-    document.getElementById('no-data-msg').classList.remove('hidden');
-    document.getElementById('stats-container').classList.add('hidden');
+document.getElementById('export-data-btn')?.addEventListener('click', exportData);
+document.getElementById('import-data-btn')?.addEventListener('click', () => {
+    const input = document.getElementById('import-file-input');
+    if (input && input.files && input.files[0]) {
+        importData(input.files[0]);
+    } else {
+        alert("Selecciona un archivo JSON para importar.");
+    }
+});
 
-    const db = await getDB();
+async function loadStats() {
+    const db = getAllResults();
     const selector = document.getElementById('group-selector');
     const container = document.getElementById('stats-container');
     const noData = document.getElementById('no-data-msg');
 
-    // Extraer grupos únicos
     const groups = [...new Set(db.map(item => item.group))].sort();
-    
-    // Rellenar selector (manteniendo opción por defecto)
+
     selector.innerHTML = '<option value="TODOS">Todos los Grupos (Global)</option>';
     groups.forEach(g => {
         const opt = document.createElement('option');
@@ -647,56 +752,56 @@ async function loadStats() {
 
     if (db.length === 0) {
         container.classList.add('hidden');
-        noData.innerText = "Aún no hay datos para mostrar en la nube.";
-        noData.classList.remove('hidden');
+        if (noData) {
+            noData.innerText = "Aún no hay datos locales. Usa 'Exportar' para compartir datos entre dispositivos.";
+            noData.classList.remove('hidden');
+        }
         return;
     }
 
     container.classList.remove('hidden');
-    noData.classList.add('hidden');
+    if (noData) noData.classList.add('hidden');
 
-    // Trigger gráfico inicial
     selector.onchange = () => drawCharts(selector.value, db);
     drawCharts('TODOS', db);
 }
 
 function drawCharts(selectedGroup, db) {
     const data = selectedGroup === 'TODOS' ? db : db.filter(item => item.group === selectedGroup);
-    
+
     if (data.length === 0) return;
 
-    // --- CALCULAR KPIs ---
     let countV = 0, countA = 0, countK = 0;
     let sumV = 0, sumA = 0, sumK = 0;
     let countM = 0, countF = 0, countO = 0;
     let sumAge = 0;
-    let countKids = 0; // <= 12
-    let countAdults = 0; // 13+
-    
-    // Variables for advanced charts
+    let countKids = 0;
+    let countAdults = 0;
+
     const countriesCount = {};
     const genderStyles = { M: {V:0, A:0, K:0}, F: {V:0, A:0, K:0}, O: {V:0, A:0, K:0} };
     const ageGroupsStyles = { Kids: {V:0, A:0, K:0}, Adults: {V:0, A:0, K:0} };
     const ageDist = {};
+    let multiCount = 0;
 
     data.forEach(item => {
-        if (item.mainStyle === "Visual") countV++;
-        else if (item.mainStyle === "Auditivo") countA++;
-        else if (item.mainStyle === "Kinestésico") countK++;
+        const styleKey = item.dominantKey || 'O';
+        if (styleKey === 'V') countV++;
+        else if (styleKey === 'A') countA++;
+        else if (styleKey === 'K') countK++;
+        else multiCount++;
 
-        sumV += item.v; sumA += item.a; sumK += item.k;
-        
+        sumV += item.v || 0; sumA += item.a || 0; sumK += item.k || 0;
+
         let gKey = 'O';
         if (item.gender === "Masculino") { countM++; gKey = 'M'; }
         else if (item.gender === "Femenino") { countF++; gKey = 'F'; }
         else countO++;
 
-        // Advanced: Gender vs Style
-        if (item.mainStyle === "Visual") genderStyles[gKey].V++;
-        else if (item.mainStyle === "Auditivo") genderStyles[gKey].A++;
-        else if (item.mainStyle === "Kinestésico") genderStyles[gKey].K++;
+        if (item.dominantKey === 'V') genderStyles[gKey].V++;
+        else if (item.dominantKey === 'A') genderStyles[gKey].A++;
+        else if (item.dominantKey === 'K') genderStyles[gKey].K++;
 
-        // Advanced: Countries
         let c = item.country || "Desconocido";
         countriesCount[c] = (countriesCount[c] || 0) + 1;
 
@@ -705,30 +810,28 @@ function drawCharts(selectedGroup, db) {
             let aKey = 'Adults';
             if (item.age <= 12) { countKids++; aKey = 'Kids'; }
             else { countAdults++; }
-            
-            // Advanced: Age distribution
+
             ageDist[item.age] = (ageDist[item.age] || 0) + 1;
-            
-            // Advanced: Age vs Style
-            if (item.mainStyle === "Visual") ageGroupsStyles[aKey].V++;
-            else if (item.mainStyle === "Auditivo") ageGroupsStyles[aKey].A++;
-            else if (item.mainStyle === "Kinestésico") ageGroupsStyles[aKey].K++;
+
+            if (item.dominantKey === 'V') ageGroupsStyles[aKey].V++;
+            else if (item.dominantKey === 'A') ageGroupsStyles[aKey].A++;
+            else if (item.dominantKey === 'K') ageGroupsStyles[aKey].K++;
         }
     });
 
     const total = data.length;
-    const avgV = (sumV / total).toFixed(1);
-    const avgA = (sumA / total).toFixed(1);
-    const avgK = (sumK / total).toFixed(1);
+    const avgV = total > 0 ? (sumV / total).toFixed(1) : 0;
+    const avgA = total > 0 ? (sumA / total).toFixed(1) : 0;
+    const avgK = total > 0 ? (sumK / total).toFixed(1) : 0;
     const avgAge = sumAge > 0 ? (sumAge / total).toFixed(1) : 0;
 
-    // Update KPI Cards
     document.getElementById('kpi-total').innerText = total;
-    
+
     const pctM = total > 0 ? (countM/total*100).toFixed(1) : 0;
     const pctF = total > 0 ? (countF/total*100).toFixed(1) : 0;
     const pctO = total > 0 ? (countO/total*100).toFixed(1) : 0;
-    document.getElementById('kpi-gender-visual').innerHTML = `
+    const genderVis = document.getElementById('kpi-gender-visual');
+    if (genderVis) genderVis.innerHTML = `
         <div style="width: ${pctM}%; background: #3b82f6;" title="Masculino: ${countM}"></div>
         <div style="width: ${pctF}%; background: #ec4899;" title="Femenino: ${countF}"></div>
         <div style="width: ${pctO}%; background: #a8a29e;" title="Otro: ${countO}"></div>
@@ -738,144 +841,154 @@ function drawCharts(selectedGroup, db) {
         <span class="kpi-badge badge-kids">🧒 ≤12 <span class="badge-label-small">(${countKids})</span></span>
         <span class="kpi-badge badge-adults">🧑 13+ <span class="badge-label-small">(${countAdults})</span></span>
     `;
-    
+
     document.getElementById('kpi-avg-age').innerText = avgAge > 0 ? `Promedio: ${avgAge} años` : '';
 
-    // --- POBLAR LISTA DE ALUMNOS (CHIPS) ---
     const listEl = document.getElementById('students-chips-list');
-    listEl.innerHTML = '';
-    
-    // Add "Promedio General" as first option
-    const avgItem = document.createElement('div');
-    avgItem.className = 'student-chip selected';
-    avgItem.innerHTML = `<span class="chip-icon">🏆</span> Promedio Global`;
-    avgItem.onclick = () => {
-        document.querySelectorAll('.student-chip').forEach(el => el.classList.remove('selected'));
-        avgItem.classList.add('selected');
-        renderStudentComparison(null, avgV, avgA, avgK);
-        renderBarChart(avgV, avgA, avgK, null, null);
-    };
-    listEl.appendChild(avgItem);
+    if (listEl) {
+        listEl.innerHTML = '';
 
-    // Add each student
-    data.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'student-chip';
-        let icon = item.mainStyle === 'Visual' ? '👁️' : (item.mainStyle === 'Auditivo' ? '👂' : '✋');
-        if (item.mainStyle && item.mainStyle.includes("Multimodal")) icon = '🧠';
-        const shortName = item.name.split(' ')[0] + (item.name.split(' ').length > 1 ? ' ' + item.name.split(' ')[1][0] + '.' : '');
-        
-        div.innerHTML = `<span class="chip-icon">${icon}</span> ${shortName}`;
-        div.onclick = () => {
+        const avgItem = document.createElement('div');
+        avgItem.className = 'student-chip selected';
+        avgItem.innerHTML = `<span class="chip-icon">🏆</span> Promedio Global`;
+        avgItem.onclick = () => {
             document.querySelectorAll('.student-chip').forEach(el => el.classList.remove('selected'));
-            div.classList.add('selected');
-            renderStudentComparison(item, avgV, avgA, avgK);
-            renderBarChart(avgV, avgA, avgK, item, shortName);
+            avgItem.classList.add('selected');
+            renderStudentComparison(null, avgV, avgA, avgK);
+            renderBarChart(avgV, avgA, avgK, null, null);
         };
-        listEl.appendChild(div);
-    });
-    
-    // Reseteamos el panel al promedio inicialmente
-    renderStudentComparison(null, avgV, avgA, avgK);
+        listEl.appendChild(avgItem);
+
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'student-chip';
+            const iconMap = { 'V': '👁️', 'A': '👂', 'K': '✋' };
+            let icon = iconMap[item.dominantKey] || '🧠';
+            if (item.dominantKey && item.dominantKey.includes("Multimodal")) icon = '🧠';
+            const shortName = item.name.split(' ')[0] + (item.name.split(' ').length > 1 ? ' ' + item.name.split(' ')[1][0] + '.' : '');
+
+            div.innerHTML = `<span class="chip-icon">${icon}</span> ${shortName}`;
+            div.onclick = () => {
+                document.querySelectorAll('.student-chip').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+                renderStudentComparison(item, avgV, avgA, avgK);
+                renderBarChart(avgV, avgA, avgK, item, shortName);
+            };
+            listEl.appendChild(div);
+        });
+
+        renderStudentComparison(null, avgV, avgA, avgK);
+    }
 
     Chart.defaults.color = '#f8fafc';
     Chart.defaults.font.family = 'Inter';
 
-    // 1. PIE CHART
-    const ctxPie = document.getElementById('chart-pie').getContext('2d');
-    if (chartPieInstance) chartPieInstance.destroy();
-    chartPieInstance = new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-            labels: ['Visual', 'Auditivo', 'Kinestésico'],
-            datasets: [{
-                data: [countV, countA, countK],
-                backgroundColor: ['#ec4899', '#8b5cf6', '#14b8a6'],
-                borderWidth: 0
-            }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-    });
+    const ctxPie = document.getElementById('chart-pie');
+    if (ctxPie) {
+        if (chartPieInstance) chartPieInstance.destroy();
+        const pieLabels = [t('styleVisual'), t('styleAuditory'), t('styleKinesthetic')];
+        const pieData = [countV, countA, countK];
+        const pieColors = ['#ec4899', '#8b5cf6', '#14b8a6'];
 
-    // 2. BAR CHART (Avg VAK)
+        if (multiCount > 0) {
+            pieLabels.push(t('styleMultimodal'));
+            pieData.push(multiCount);
+            pieColors.push('#f59e0b');
+        }
+
+        chartPieInstance = new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: pieLabels,
+                datasets: [{ data: pieData, backgroundColor: pieColors, borderWidth: 0 }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
     renderBarChart(avgV, avgA, avgK, null, null);
 
-    // 3. COUNTRIES (Pie)
-    const ctxCountries = document.getElementById('chart-countries').getContext('2d');
-    if (chartCountriesInstance) chartCountriesInstance.destroy();
-    chartCountriesInstance = new Chart(ctxCountries, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(countriesCount),
-            datasets: [{
-                data: Object.values(countriesCount),
-                backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#64748b'],
-                borderWidth: 0
-            }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-    });
+    const ctxCountries = document.getElementById('chart-countries');
+    if (ctxCountries) {
+        if (chartCountriesInstance) chartCountriesInstance.destroy();
+        chartCountriesInstance = new Chart(ctxCountries, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(countriesCount),
+                datasets: [{
+                    data: Object.values(countriesCount),
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#64748b'],
+                    borderWidth: 0
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+    }
 
-    // 4. GENDER vs STYLE (Stacked Bar)
-    const ctxGender = document.getElementById('chart-gender').getContext('2d');
-    if (chartGenderInstance) chartGenderInstance.destroy();
-    chartGenderInstance = new Chart(ctxGender, {
-        type: 'bar',
-        data: {
-            labels: ['Visual', 'Auditivo', 'Kinestésico'],
-            datasets: [
-                { label: 'Femenino', data: [genderStyles.F.V, genderStyles.F.A, genderStyles.F.K], backgroundColor: '#ec4899' },
-                { label: 'Masculino', data: [genderStyles.M.V, genderStyles.M.A, genderStyles.M.K], backgroundColor: '#3b82f6' },
-                { label: 'Otro', data: [genderStyles.O.V, genderStyles.O.A, genderStyles.O.K], backgroundColor: '#a8a29e' }
-            ]
-        },
-        options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
-    });
+    const ctxGender = document.getElementById('chart-gender');
+    if (ctxGender) {
+        if (chartGenderInstance) chartGenderInstance.destroy();
+        chartGenderInstance = new Chart(ctxGender, {
+            type: 'bar',
+            data: {
+                labels: [t('styleVisual'), t('styleAuditory'), t('styleKinesthetic')],
+                datasets: [
+                    { label: t('genderFemale') || 'Femenino', data: [genderStyles.F.V, genderStyles.F.A, genderStyles.F.K], backgroundColor: '#ec4899' },
+                    { label: t('genderMale') || 'Masculino', data: [genderStyles.M.V, genderStyles.M.A, genderStyles.M.K], backgroundColor: '#3b82f6' },
+                    { label: t('genderOther') || 'Otro', data: [genderStyles.O.V, genderStyles.O.A, genderStyles.O.K], backgroundColor: '#a8a29e' }
+                ]
+            },
+            options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
 
-    // 5. AGE RANGE vs STYLE (Bar)
-    const ctxAgeStyle = document.getElementById('chart-age-style').getContext('2d');
-    if (chartAgeStyleInstance) chartAgeStyleInstance.destroy();
-    chartAgeStyleInstance = new Chart(ctxAgeStyle, {
-        type: 'bar',
-        data: {
-            labels: ['Visual', 'Auditivo', 'Kinestésico'],
-            datasets: [
-                { label: 'Niños (≤12)', data: [ageGroupsStyles.Kids.V, ageGroupsStyles.Kids.A, ageGroupsStyles.Kids.K], backgroundColor: '#14b8a6' },
-                { label: 'Adultos (13+)', data: [ageGroupsStyles.Adults.V, ageGroupsStyles.Adults.A, ageGroupsStyles.Adults.K], backgroundColor: '#f59e0b' }
-            ]
-        },
-        options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
-    });
+    const ctxAgeStyle = document.getElementById('chart-age-style');
+    if (ctxAgeStyle) {
+        if (chartAgeStyleInstance) chartAgeStyleInstance.destroy();
+        chartAgeStyleInstance = new Chart(ctxAgeStyle, {
+            type: 'bar',
+            data: {
+                labels: [t('styleVisual'), t('styleAuditory'), t('styleKinesthetic')],
+                datasets: [
+                    { label: t('ageKids') || 'Niños (≤12)', data: [ageGroupsStyles.Kids.V, ageGroupsStyles.Kids.A, ageGroupsStyles.Kids.K], backgroundColor: '#14b8a6' },
+                    { label: t('ageAdults') || 'Adultos (13+)', data: [ageGroupsStyles.Adults.V, ageGroupsStyles.Adults.A, ageGroupsStyles.Adults.K], backgroundColor: '#f59e0b' }
+                ]
+            },
+            options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
 
-    // 6. EXACT AGE DIST (Line/Bar)
-    const ctxAgeDist = document.getElementById('chart-age-dist').getContext('2d');
-    if (chartAgeDistInstance) chartAgeDistInstance.destroy();
-    const sortedAges = Object.keys(ageDist).sort((a,b)=>parseInt(a)-parseInt(b));
-    chartAgeDistInstance = new Chart(ctxAgeDist, {
-        type: 'bar',
-        data: {
-            labels: sortedAges,
-            datasets: [{
-                label: 'Cant. de Alumnos',
-                data: sortedAges.map(age => ageDist[age]),
-                backgroundColor: 'rgba(139, 92, 246, 0.6)',
-                borderColor: '#8b5cf6',
-                borderWidth: 1
-            }]
-        },
-        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
-    });
+    const ctxAgeDist = document.getElementById('chart-age-dist');
+    if (ctxAgeDist) {
+        if (chartAgeDistInstance) chartAgeDistInstance.destroy();
+        const sortedAges = Object.keys(ageDist).sort((a,b)=>parseInt(a)-parseInt(b));
+        chartAgeDistInstance = new Chart(ctxAgeDist, {
+            type: 'bar',
+            data: {
+                labels: sortedAges,
+                datasets: [{
+                    label: 'Cant. de Alumnos',
+                    data: sortedAges.map(age => ageDist[age]),
+                    backgroundColor: 'rgba(139, 92, 246, 0.6)',
+                    borderColor: '#8b5cf6',
+                    borderWidth: 1
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+        });
+    }
 }
 
 function renderBarChart(avgV, avgA, avgK, studentObj, studentName) {
-    const ctxBar = document.getElementById('chart-bar').getContext('2d');
+    const ctxBar = document.getElementById('chart-bar');
+    if (!ctxBar) return;
     if (chartBarInstance) chartBarInstance.destroy();
 
     const datasets = [
         {
             label: 'Promedio del Grupo',
             data: [avgV, avgA, avgK],
-            backgroundColor: 'rgba(59, 130, 246, 0.4)', // Blueish
+            backgroundColor: 'rgba(59, 130, 246, 0.4)',
             borderColor: 'rgba(59, 130, 246, 1)',
             borderWidth: 1
         }
@@ -885,7 +998,7 @@ function renderBarChart(avgV, avgA, avgK, studentObj, studentName) {
         datasets.push({
             label: studentName,
             data: [studentObj.v, studentObj.a, studentObj.k],
-            backgroundColor: 'rgba(250, 204, 21, 0.8)', // Gold/Yellow highlight
+            backgroundColor: 'rgba(250, 204, 21, 0.8)',
             borderColor: 'rgba(250, 204, 21, 1)',
             borderWidth: 2
         });
@@ -894,50 +1007,51 @@ function renderBarChart(avgV, avgA, avgK, studentObj, studentName) {
     chartBarInstance = new Chart(ctxBar, {
         type: 'bar',
         data: {
-            labels: ['Visual %', 'Auditivo %', 'Kinestésico %'],
+            labels: [t('styleVisual'), t('styleAuditory'), t('styleKinesthetic')],
             datasets: datasets
         },
-        options: { 
-            scales: { y: { beginAtZero: true, max: 100 } }, 
-            plugins: { 
-                legend: { display: studentObj ? true : false, position: 'bottom' } 
-            } 
+        options: {
+            scales: { y: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { display: !!studentObj, position: 'bottom' } }
         }
     });
 }
 
 function renderStudentComparison(studentObj, avgV, avgA, avgK) {
     const panel = document.getElementById('student-comparison-panel');
+    if (!panel) return;
+
     if (!studentObj) {
-        panel.innerHTML = `<div class="comparison-empty"><p>👆 Selecciona un alumno de la lista para ver su perfil comparativo con el grupo.</p></div>`;
+        panel.innerHTML = `<div class="comparison-empty"><p>👆 Selecciona un alumno de la lista para ver su perfil comparativo.</p></div>`;
         return;
     }
-    let icon = studentObj.mainStyle === 'Visual' ? '👁️' : (studentObj.mainStyle === 'Auditivo' ? '👂' : '✋');
-    if (studentObj.mainStyle && studentObj.mainStyle.includes("Multimodal")) icon = '🧠';
-    
+    const iconMap = { 'V': '👁️', 'A': '👂', 'K': '✋' };
+    let icon = iconMap[studentObj.dominantKey] || '🧠';
+    if (studentObj.dominantKey && studentObj.dominantKey.includes("Multimodal")) icon = '🧠';
+
     panel.innerHTML = `
         <div class="comparison-title">
             <h3>${studentObj.name}</h3>
-            <span class="comparison-badge">${icon} ${studentObj.mainStyle}</span>
+            <span class="comparison-badge">${icon} ${getStyleLabel(studentObj.dominantKey)}</span>
         </div>
         <div style="display:flex; flex-direction:column; gap: 15px;">
             <div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem;">
-                    <span><strong style="color:var(--color-v)">Visual</strong>: ${studentObj.v}%</span> 
+                    <span><strong style="color:var(--color-v)">${t('styleVisual')}</strong>: ${studentObj.v}%</span>
                     <span style="opacity:0.6; font-size:0.75rem;">(Grupo: ${avgV}%)</span>
                 </div>
                 <div class="progress-bar" style="background: rgba(255,255,255,0.05);"><div class="progress-fill fill-v" style="width: ${studentObj.v}%; border-radius: 4px;"></div></div>
             </div>
             <div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem;">
-                    <span><strong style="color:var(--color-a)">Auditivo</strong>: ${studentObj.a}%</span> 
+                    <span><strong style="color:var(--color-a)">${t('styleAuditory')}</strong>: ${studentObj.a}%</span>
                     <span style="opacity:0.6; font-size:0.75rem;">(Grupo: ${avgA}%)</span>
                 </div>
                 <div class="progress-bar" style="background: rgba(255,255,255,0.05);"><div class="progress-fill fill-a" style="width: ${studentObj.a}%; border-radius: 4px;"></div></div>
             </div>
             <div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem;">
-                    <span><strong style="color:var(--color-k)">Kinestésico</strong>: ${studentObj.k}%</span> 
+                    <span><strong style="color:var(--color-k)">${t('styleKinesthetic')}</strong>: ${studentObj.k}%</span>
                     <span style="opacity:0.6; font-size:0.75rem;">(Grupo: ${avgK}%)</span>
                 </div>
                 <div class="progress-bar" style="background: rgba(255,255,255,0.05);"><div class="progress-fill fill-k" style="width: ${studentObj.k}%; border-radius: 4px;"></div></div>
@@ -947,44 +1061,28 @@ function renderStudentComparison(studentObj, avgV, avgA, avgK) {
 }
 
 // --- COMENTARIOS ---
-document.getElementById('submit-comment-btn').addEventListener('click', async () => {
+document.getElementById('submit-comment-btn')?.addEventListener('click', async () => {
     const name = document.getElementById('comment-name').value.trim();
     const text = document.getElementById('comment-text').value.trim();
     const errorEl = document.getElementById('comment-error');
-    
+
     if (!name || !text) {
         errorEl.classList.remove('hidden');
         return;
     }
     errorEl.classList.add('hidden');
-    
+
     document.getElementById('submit-comment-btn').innerText = "Guardando...";
 
-    let currentData = { results: [], comments: [] };
-    try {
-        const res = await fetch(CLOUD_API_URL);
-        currentData = await res.json();
-        if (Array.isArray(currentData)) currentData = { results: currentData, comments: [] };
-    } catch (e) {}
-
-    if (!currentData.comments) currentData.comments = [];
-
-    currentData.comments.push({
+    let currentComments = getCommentsData();
+    currentComments.push({
+        id: generateId(),
         name: name,
         text: text,
         date: new Date().toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
     });
-    
-    // Backup local
-    localStorage.setItem('vak_comments', JSON.stringify(currentData.comments));
-    
-    try {
-        await fetch(CLOUD_API_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(currentData)
-        });
-    } catch (e) {}
+
+    localStorage.setItem(COMMENTS_KEY, JSON.stringify(currentComments));
 
     document.getElementById('comment-name').value = '';
     document.getElementById('comment-text').value = '';
@@ -992,40 +1090,39 @@ document.getElementById('submit-comment-btn').addEventListener('click', async ()
     loadComments();
 });
 
-async function getComments() {
+function getCommentsData() {
     try {
-        const res = await fetch(CLOUD_API_URL);
-        const data = await res.json();
-        if (data && data.comments) return data.comments;
-        return [];
+        const raw = localStorage.getItem(COMMENTS_KEY);
+        const data = raw ? JSON.parse(raw) : [];
+        return Array.isArray(data) ? data : [];
     } catch (e) {
-        const local = localStorage.getItem('vak_comments');
-        return local ? JSON.parse(local) : [];
+        return [];
     }
 }
 
-async function loadComments() {
+function loadComments() {
     const listEl = document.getElementById('comments-list');
+    if (!listEl) return;
+
     listEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Cargando opiniones...</p>';
-    
-    const comments = await getComments();
-    
+
+    const comments = getCommentsData();
+
     if (comments.length === 0) {
         listEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary); margin-top: 20px;">Aún no hay comentarios. ¡Sé el primero en opinar!</p>';
         return;
     }
-    
+
     listEl.innerHTML = '';
-    
-    // Reverse array to show newest first
+
     const reversed = [...comments].reverse();
-    
+
     reversed.forEach(c => {
         const div = document.createElement('div');
         div.className = 'comment-box';
-        
+
         const safeName = c.name || "Anónimo";
-        
+
         div.innerHTML = `
             <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
                 <span style="font-weight: bold; color: white; margin-right: 8px;">${safeName}</span>

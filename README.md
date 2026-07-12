@@ -16,9 +16,10 @@ Esta aplicación web fue desarrollada como **instrumento empírico de apoyo** pa
    - Promedio porcentual de la clase en cada dimensión (Gráfico de barras).
    - Índice de participación por grupos.
 
-3. **Sincronización en la Nube (Cloud Data):**
-   - Los resultados de los alumnos y los comentarios se guardan en un repositorio JSON en la nube.
-   - Permite recolectar datos de alumnos que realicen el test desde distintos celulares o computadoras y unificarlos en un solo panel estadístico.
+3. **Persistencia Local y Portabilidad de Datos:**
+   - Los resultados y comentarios se guardan localmente en el navegador del dispositivo.
+   - El docente puede exportar/importar un archivo JSON para unificar resultados entre dispositivos sin depender de servicios inseguros.
+   - Nota: la versión 1.0.1 elimina JSONBlob público por razones de seguridad, privacidad y robustez.
 
 4. **Foro de Comentarios:**
    - Espacio integrado para que los usuarios dejen feedback o sus impresiones tras realizar la prueba.

@@ -116,9 +116,13 @@
                                 </div>
                             </div>
 
+                            <label style="display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.85rem; color: var(--text-secondary); text-align: left;">
+                                <input type="checkbox" id="consent-checkbox">
+                                <span data-i18n="consentText">Acepto el aviso de privacidad: mis datos son anónimos y se guardan solo localmente en este dispositivo.</span>
+                            </label>
                             <div style="display: flex; gap: 12px; margin-top: 15px;">
-                                <button id="step-2-back" class="btn secondary-btn" style="padding: 12px 18px;">← Cambiar grupo</button>
-                                <button id="continue-btn" class="btn primary-btn" style="flex: 1;" data-i18n="btnContinue">Comenzar Test VAK 🚀</button>
+                                <button id="step-2-back" class="btn secondary-btn" style="padding: 12px 18px;" title="Volver">🔙</button>
+                                <button id="continue-btn" class="btn primary-btn" style="flex: 1;" data-i18n="btnContinue" disabled>Comenzar Test VAK 🚀</button>
                             </div>
                         </div>
                     </div>
@@ -128,10 +132,10 @@
                         <div class="qr-compact-card">
                             <div class="qr-compact-header">
                                 <span class="qr-compact-icon">📱</span>
-                                <h4>¿Estás en PC? Escanea para responder en tu celular</h4>
+                                <h4 data-i18n="qrTitle">Escanea para abrir en tu celular</h4>
                             </div>
-                            <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://wmlumen.github.io/VAK-1/" alt="QR VAK" title="Escanea con tu celular">
-                            <p class="qr-hint">Apunta tu cámara para abrir este test cómodamente en tu teléfono.</p>
+                            <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" alt="QR VAK" title="Escanea con tu celular" style="cursor: pointer;">
+                            <p class="qr-hint" data-i18n="qrHint">Toca el QR para ampliarlo.</p>
                         </div>
                     </div>
                 </div>
@@ -204,8 +208,11 @@
                             <option value="">-- Seleccionar Grupo --</option>
                         </select>
                     </div>
-                    <div class="dashboard-actions">
+                    <div class="dashboard-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button id="print-stats-btn" class="btn btn-secondary">🖨️ Imprimir Reporte</button>
+                        <button id="export-data-btn" class="btn btn-secondary">📤 Exportar Datos</button>
+                        <button id="import-data-btn" class="btn btn-secondary">📥 Importar Datos</button>
+                        <input type="file" id="import-file-input" accept="application/json" style="display: none;">
                     </div>
                 </div>
             </div>
