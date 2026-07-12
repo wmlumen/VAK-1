@@ -72,6 +72,10 @@
                         <option value="Otro">Otro</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="user-age">Edad:</label>
+                    <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
+                </div>
                 <button id="continue-btn" class="btn primary-btn" style="margin-top: 15px;">Continuar</button>
             </section>
 
@@ -141,26 +145,53 @@
             <h1>Panel del Docente</h1>
             <p class="description" style="text-align: center; margin-bottom: 10px;">Selecciona un grupo para ver sus métricas globales.</p>
             
-            <div class="form-group" style="max-width: 300px; margin: 0 auto 30px auto;">
+            <div class="form-group" style="max-width: 300px; margin: 0 auto 15px auto;">
                 <select id="group-selector" class="glass-input">
                     <option value="">-- Seleccionar Grupo --</option>
                 </select>
             </div>
 
             <div id="stats-container" class="hidden">
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <h3>Distribución de Estilos Predominantes</h3>
-                        <canvas id="chart-pie"></canvas>
+                <!-- Tarjetas KPI -->
+                <div class="kpi-container" id="kpi-cards">
+                    <div class="kpi-card">
+                        <h4>Total Alumnos</h4>
+                        <span id="kpi-total">0</span>
                     </div>
-                    <div class="chart-card">
-                        <h3>Promedio General V-A-K (%)</h3>
-                        <canvas id="chart-bar"></canvas>
+                    <div class="kpi-card">
+                        <h4>Desglose por Sexo</h4>
+                        <span id="kpi-gender" style="font-size: 1rem;">M: 0 | F: 0 | O: 0</span>
+                    </div>
+                    <div class="kpi-card">
+                        <h4>Edad Promedio</h4>
+                        <span id="kpi-age">0</span>
                     </div>
                 </div>
-                <div class="chart-card" style="margin-top: 20px;">
-                    <h3>Participación Total por Grupo</h3>
-                    <canvas id="chart-participation" height="100"></canvas>
+                
+                <!-- Layout principal Estadísticas -->
+                <div class="stats-layout">
+                    <!-- Gráficos -->
+                    <div class="charts-area">
+                        <div class="charts-grid">
+                            <div class="chart-card">
+                                <h3>Distribución de Estilos Predominantes</h3>
+                                <canvas id="chart-pie"></canvas>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Promedio V-A-K (%)</h3>
+                                <canvas id="chart-bar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Alumnos -->
+                    <div class="students-sidebar">
+                        <h3>Lista de Alumnos</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">Toca un nombre para comparar su resultado.</p>
+                        <div id="students-list" class="students-list">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="no-data-msg" style="text-align: center; color: var(--text-secondary);">

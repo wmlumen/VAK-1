@@ -32,7 +32,7 @@ const questionsKids = [
 ];
 
 // Estado global
-let currentUser = { name: "", group: "", gender: "" };
+let currentUser = { name: "", group: "", gender: "", age: "" };
 let currentQuestionIndex = 0;
 let currentQuestions = [];
 let answers = [];
@@ -83,13 +83,14 @@ document.getElementById('continue-btn').addEventListener('click', () => {
     const nameVal = document.getElementById('user-name').value.trim();
     const groupVal = document.getElementById('user-group').value.trim().toUpperCase();
     const genderVal = document.getElementById('user-gender').value;
+    const ageVal = document.getElementById('user-age').value;
     const errorMsg = document.getElementById('group-error');
     
     // Regex: exactly 3 letters + 3 numbers
     const regex = /^[A-Z]{3}[0-9]{3}$/;
     
-    if (!nameVal || !groupVal || !genderVal) {
-        alert("Por favor ingresa tu nombre, grupo y género para continuar.");
+    if (!nameVal || !groupVal || !genderVal || !ageVal) {
+        alert("Por favor ingresa todos los datos: nombre, grupo, género y edad.");
         return;
     }
     
@@ -102,6 +103,7 @@ document.getElementById('continue-btn').addEventListener('click', () => {
     currentUser.name = nameVal;
     currentUser.group = groupVal;
     currentUser.gender = genderVal;
+    currentUser.age = parseInt(ageVal);
     
     document.getElementById('display-name').innerText = nameVal;
     showScreen('start');
@@ -207,7 +209,7 @@ function calculateResults() {
     }
 
     // GUARDAR EN LOCALSTORAGE
-    saveResultToDB(currentUser.name, currentUser.group, currentUser.gender, pV, pA, pK, dominants[0]);
+    saveResultToDB(currentUser.name, currentUser.group, currentUser.gender, currentUser.age, pV, pA, pK, dominants[0]);
 }
 
 document.getElementById('download-btn').addEventListener('click', () => {
@@ -224,6 +226,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('user-name').value = '';
     document.getElementById('user-group').value = '';
     document.getElementById('user-gender').value = '';
+    document.getElementById('user-age').value = '';
     showScreen('welcome');
 });
 
@@ -243,7 +246,7 @@ async function getDB() {
     }
 }
 
-async function saveResultToDB(name, group, gender, v, a, k, mainStyle) {
+async function saveResultToDB(name, group, gender, age, v, a, k, mainStyle) {
     let currentData = { results: [], comments: [] };
     try {
         const res = await fetch(CLOUD_API_URL);
@@ -254,10 +257,11 @@ async function saveResultToDB(name, group, gender, v, a, k, mainStyle) {
     if (!currentData.results) currentData.results = [];
 
     currentData.results.push({
-        id: Date.now(),
+        id: Date.now().toString(),
         name: name,
         group: group,
         gender: gender,
+        age: age,
         v: v, a: a, k: k,
         mainStyle: mainStyle
     });
@@ -324,10 +328,11 @@ function drawCharts(selectedGroup, db) {
     
     if (data.length === 0) return;
 
-    // Calc Pie (Dominants)
+    // --- CALCULAR KPIs ---
     let countV = 0, countA = 0, countK = 0;
-    // Calc Averages
     let sumV = 0, sumA = 0, sumK = 0;
+    let countM = 0, countF = 0, countO = 0;
+    let sumAge = 0;
 
     data.forEach(item => {
         if (item.mainStyle === "Visual") countV++;
@@ -335,15 +340,52 @@ function drawCharts(selectedGroup, db) {
         else if (item.mainStyle === "Kinestésico") countK++;
 
         sumV += item.v; sumA += item.a; sumK += item.k;
+        
+        if (item.gender === "Masculino") countM++;
+        else if (item.gender === "Femenino") countF++;
+        else countO++;
+
+        if (item.age) sumAge += item.age;
     });
 
-    const avgV = (sumV / data.length).toFixed(1);
-    const avgA = (sumA / data.length).toFixed(1);
-    const avgK = (sumK / data.length).toFixed(1);
+    const total = data.length;
+    const avgV = (sumV / total).toFixed(1);
+    const avgA = (sumA / total).toFixed(1);
+    const avgK = (sumK / total).toFixed(1);
+    const avgAge = sumAge > 0 ? (sumAge / total).toFixed(1) : 0;
 
-    // Calc Participation by Group for global
-    const groupCounts = {};
-    db.forEach(item => { groupCounts[item.group] = (groupCounts[item.group] || 0) + 1; });
+    // Update KPI Cards
+    document.getElementById('kpi-total').innerText = total;
+    document.getElementById('kpi-gender').innerText = `M: ${countM} | F: ${countF} | O: ${countO}`;
+    document.getElementById('kpi-age').innerText = avgAge > 0 ? `${avgAge} años` : 'N/A';
+
+    // --- POBLAR LISTA DE ALUMNOS ---
+    const listEl = document.getElementById('students-list');
+    listEl.innerHTML = '';
+    
+    // Add "Promedio General" as first option
+    const avgItem = document.createElement('div');
+    avgItem.className = 'student-item selected';
+    avgItem.innerHTML = `<strong>🏆 Promedio del Grupo</strong>`;
+    avgItem.onclick = () => {
+        document.querySelectorAll('.student-item').forEach(el => el.classList.remove('selected'));
+        avgItem.classList.add('selected');
+        renderBarChart(avgV, avgA, avgK, null, null);
+    };
+    listEl.appendChild(avgItem);
+
+    // Add each student
+    data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'student-item';
+        div.innerHTML = `<span>${item.name}</span> <span style="font-size:0.8rem; opacity:0.8;">${item.mainStyle}</span>`;
+        div.onclick = () => {
+            document.querySelectorAll('.student-item').forEach(el => el.classList.remove('selected'));
+            div.classList.add('selected');
+            renderBarChart(avgV, avgA, avgK, item, item.name);
+        };
+        listEl.appendChild(div);
+    });
 
     Chart.defaults.color = '#f8fafc';
     Chart.defaults.font.family = 'Inter';
@@ -364,40 +406,46 @@ function drawCharts(selectedGroup, db) {
         options: { plugins: { legend: { position: 'bottom' } } }
     });
 
-    // 2. BAR CHART (Averages)
+    // 2. BAR CHART
+    renderBarChart(avgV, avgA, avgK, null, null);
+}
+
+function renderBarChart(avgV, avgA, avgK, studentObj, studentName) {
     const ctxBar = document.getElementById('chart-bar').getContext('2d');
     if (chartBarInstance) chartBarInstance.destroy();
+
+    const datasets = [
+        {
+            label: 'Promedio del Grupo',
+            data: [avgV, avgA, avgK],
+            backgroundColor: 'rgba(59, 130, 246, 0.4)', // Blueish
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1
+        }
+    ];
+
+    if (studentObj) {
+        datasets.push({
+            label: studentName,
+            data: [studentObj.v, studentObj.a, studentObj.k],
+            backgroundColor: 'rgba(250, 204, 21, 0.8)', // Gold/Yellow highlight
+            borderColor: 'rgba(250, 204, 21, 1)',
+            borderWidth: 2
+        });
+    }
+
     chartBarInstance = new Chart(ctxBar, {
         type: 'bar',
         data: {
             labels: ['Visual %', 'Auditivo %', 'Kinestésico %'],
-            datasets: [{
-                label: 'Promedio del Grupo',
-                data: [avgV, avgA, avgK],
-                backgroundColor: ['rgba(236, 72, 153, 0.6)', 'rgba(139, 92, 246, 0.6)', 'rgba(20, 184, 166, 0.6)'],
-                borderColor: ['#ec4899', '#8b5cf6', '#14b8a6'],
-                borderWidth: 1
-            }]
+            datasets: datasets
         },
-        options: { scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
-    });
-
-    // 3. PARTICIPATION CHART
-    const ctxPart = document.getElementById('chart-participation').getContext('2d');
-    if (chartPartInstance) chartPartInstance.destroy();
-    
-    // Only show participation logic makes sense if global, but we show it anyway
-    chartPartInstance = new Chart(ctxPart, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(groupCounts),
-            datasets: [{
-                label: 'Cantidad de Alumnos',
-                data: Object.values(groupCounts),
-                backgroundColor: 'rgba(59, 130, 246, 0.7)'
-            }]
-        },
-        options: { indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        options: { 
+            scales: { y: { beginAtZero: true, max: 100 } }, 
+            plugins: { 
+                legend: { display: studentObj ? true : false, position: 'bottom' } 
+            } 
+        }
     });
 }
 
