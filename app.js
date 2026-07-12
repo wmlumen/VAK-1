@@ -32,30 +32,68 @@ function setLanguage(lang) {
 }
 
 async function loadCountries() {
+    const select = document.getElementById('user-country');
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = "";
+    defaultOpt.disabled = true;
+    defaultOpt.selected = true;
+    defaultOpt.setAttribute('data-i18n', 'selectCountryDef');
+    defaultOpt.innerText = window.i18n[currentLang].ui.selectCountryDef;
+    select.innerHTML = '';
+    select.appendChild(defaultOpt);
+
+    let countriesLoaded = false;
     try {
-        const res = await fetch('https://restcountries.com/v3.1/all?fields=name,translations');
+        const res = await fetch('https://restcountries.com/v3.1/all?fields=name');
         const data = await res.json();
-        const select = document.getElementById('user-country');
-        const defaultOpt = document.createElement('option');
-        defaultOpt.value = "";
-        defaultOpt.disabled = true;
-        defaultOpt.selected = true;
-        defaultOpt.setAttribute('data-i18n', 'selectCountryDef');
-        defaultOpt.innerText = window.i18n[currentLang].ui.selectCountryDef;
-        select.innerHTML = '';
-        select.appendChild(defaultOpt);
         
-        data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-        
-        data.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.name.common;
-            // Para idiomas específicos, se podría usar c.translations, pero common es estándar
-            opt.innerText = c.name.common; 
-            select.appendChild(opt);
-        });
+        if (Array.isArray(data)) {
+            data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+            data.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name.common;
+                opt.innerText = c.name.common; 
+                select.appendChild(opt);
+            });
+            countriesLoaded = true;
+        }
     } catch (e) {
         console.error("Error cargando países", e);
+    }
+    
+    // Lista de respaldo en caso de que la API falle
+    if (!countriesLoaded) {
+        const fallback = ["Argentina", "Bolivia", "Brasil", "Canadá", "Chile", "Colombia", "Costa Rica", "Cuba", "Ecuador", "El Salvador", "España", "Estados Unidos", "Guatemala", "Honduras", "México", "Nicaragua", "Panamá", "Paraguay", "Perú", "Puerto Rico", "República Dominicana", "Uruguay", "Venezuela", "Otro"];
+        fallback.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.innerText = c;
+            select.appendChild(opt);
+        });
+    }
+
+    // Auto-detectar país por IP y seleccionarlo
+    try {
+        const ipRes = await fetch('https://ipapi.co/json/');
+        const ipData = await ipRes.json();
+        if (ipData && ipData.country_name) {
+            let found = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === ipData.country_name || select.options[i].value.includes(ipData.country_name)) {
+                    select.selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                const opt = document.createElement('option');
+                opt.value = ipData.country_name;
+                opt.innerText = ipData.country_name;
+                select.appendChild(opt);
+                select.selectedIndex = select.options.length - 1;
+            }
+        }
+    } catch (e) {
+        console.error("Error detectando IP", e);
     }
 }
 
