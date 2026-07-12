@@ -252,7 +252,29 @@ canvas { max-width: 100%; }
     z-index: 50;
 }
 @media (max-width: 768px) {
-    .qr-container { display: none; } /* En móvil no tiene sentido escanear un QR de la misma pantalla */
+    .qr-container { display: none; } /* En móvil no tiene sentido escanear un QR de la mesma pantalla */
+}
+
+.lang-selector {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+}
+.lang-selector select {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+}
+.lang-selector select option {
+    background: #1e293b;
+    color: #fff;
 }
 
 .fullscreen-qr {

@@ -1,40 +1,67 @@
-// Banco de Preguntas - Jóvenes y Adultos (15 Preguntas)
-const questionsAdults = [
-    { question: "1. Cuando estás armando un mueble nuevo o configurando un aparato, tú prefieres:", options: [ { text: "Mirar las instrucciones y los diagramas antes de empezar.", style: "V" }, { text: "Pedirle a alguien que te lea las instrucciones o te explique cómo hacerlo.", style: "A" }, { text: "Empezar a armarlo directamente, probando las piezas a ver cómo encajan.", style: "K" } ] },
-    { question: "2. Si necesitas recordar cómo llegar a un lugar nuevo, tú:", options: [ { text: "Te imaginas un mapa en tu cabeza o buscas puntos de referencia visuales.", style: "V" }, { text: "Repites las indicaciones en voz alta o recuerdas a alguien explicándotelas.", style: "A" }, { text: "Dejas que tu intuición te guíe porque tu cuerpo 'recuerda' el camino.", style: "K" } ] },
-    { question: "3. En tu tiempo libre, ¿qué actividad disfrutas más?", options: [ { text: "Ver una buena película, leer un libro o mirar fotografías.", style: "V" }, { text: "Escuchar música, un podcast o charlar largo rato con amigos.", style: "A" }, { text: "Hacer deporte, salir a caminar o armar cosas con las manos.", style: "K" } ] },
-    { question: "4. Cuando estás en una clase aburrida, sueles:", options: [ { text: "Ponerme a dibujar, hacer garabatos o mirar fijamente a la nada.", style: "V" }, { text: "Canturrear para mí mismo o empezar a hablar con el compañero de al lado.", style: "A" }, { text: "Mover los pies, balancearme en la silla o jugar con el bolígrafo.", style: "K" } ] },
-    { question: "5. Cuando intentas estudiar o concentrarte para un examen, te ayuda mucho:", options: [ { text: "Usar muchos colores, subrayar y hacer mapas mentales.", style: "V" }, { text: "Estudiar en voz alta o debatir los temas con un compañero.", style: "A" }, { text: "Caminar por la habitación mientras repasas o reescribir todo varias veces.", style: "K" } ] },
-    { question: "6. Para recordar un número de teléfono que acabas de escuchar, tú:", options: [ { text: "Te imaginas los números escritos en un papel.", style: "V" }, { text: "Lo repites en voz alta varias veces por su 'ritmo' o sonido.", style: "A" }, { text: "Haces el gesto de marcarlo con los dedos en el aire o en el celular.", style: "K" } ] },
-    { question: "7. Si estás viendo una obra de teatro o una película, lo que más te llama la atención es:", options: [ { text: "La escenografía, la iluminación, el vestuario y los efectos especiales.", style: "V" }, { text: "Los diálogos, la música de fondo y los efectos de sonido.", style: "A" }, { text: "Las escenas de acción, el movimiento y sentir la emoción físicamente.", style: "K" } ] },
-    { question: "8. Al momento de conocer a una persona nueva, sueles recordar mejor:", options: [ { text: "Su cara, pero te olvidas de su nombre.", style: "V" }, { text: "Su nombre o su tono de voz, pero te cuesta recordar su cara.", style: "A" }, { text: "Lo que hicieron juntos o la impresión general que te dejó esa situación.", style: "K" } ] },
-    { question: "9. Si tienes que presentar un trabajo final frente a una clase, tú prefieres:", options: [ { text: "Hacer una presentación de diapositivas muy bonita con muchos gráficos.", style: "V" }, { text: "Preparar un buen discurso y tener clara la historia que vas a contar.", style: "A" }, { text: "Llevar objetos físicos, maquetas o invitar al público a hacer un ejercicio.", style: "K" } ] },
-    { question: "10. Cuando sientes que te distraes fácilmente, usualmente es porque:", options: [ { text: "Hay mucho desorden visual a mi alrededor o la pantalla está muy brillante.", style: "V" }, { text: "Hay ruidos de fondo, música fuerte o gente hablando cerca.", style: "A" }, { text: "Hace rato que estoy sentado o la silla es incómoda.", style: "K" } ] },
-    { question: "11. Cuando estás enojado o feliz, tu forma principal de expresarlo es:", options: [ { text: "A través de mis expresiones faciales; se me nota en la cara.", style: "V" }, { text: "Por el tono de mi voz, hablando más fuerte o más rápido.", style: "A" }, { text: "Con el lenguaje corporal: gesticulo mucho o abrazo fuerte.", style: "K" } ] },
-    { question: "12. A la hora de comprar ropa, tu proceso de elección se basa en:", options: [ { text: "Cómo se ve el color y cómo combina con lo que ya tengo.", style: "V" }, { text: "Lo que me dicen el vendedor o mis amigos sobre cómo me queda.", style: "A" }, { text: "Cómo se siente la tela al tocarla y si estoy cómodo al moverme.", style: "K" } ] },
-    { question: "13. Al explicarle una idea compleja a otra persona, tiendes a:", options: [ { text: "Agarrar un papel y hacer un dibujo o esquema rápido.", style: "V" }, { text: "Hablar despacio, dando muchos ejemplos verbales y detalles sonoros.", style: "A" }, { text: "Usar muchos gestos con las manos o mostrarle cómo se hace con un ejemplo físico.", style: "K" } ] },
-    { question: "14. Imagina que vas a aprender un nuevo idioma. Lo que más te sirve es:", options: [ { text: "Ver programas con subtítulos y leer carteles o tarjetas de vocabulario.", style: "V" }, { text: "Escuchar canciones, repetir audios o conversar con hablantes nativos.", style: "A" }, { text: "Hacer juegos de rol donde actuemos situaciones de la vida real.", style: "K" } ] },
-    { question: "15. De estas tres descripciones de un momento de relax, ¿cuál prefieres?", options: [ { text: "Disfrutar de un hermoso paisaje o ver arte.", style: "V" }, { text: "Acostarte en silencio o escuchar música relajante.", style: "A" }, { text: "Recibir un masaje, tomar un baño caliente o hacer estiramientos.", style: "K" } ] }
-];
-
-// Banco de Preguntas - Niños (10 Preguntas)
-const questionsKids = [
-    { question: "1. ¿Qué prefieres hacer en el recreo o en tu tiempo libre?", options: [ { text: "Leer un libro de cuentos con muchos dibujos o ver dibujitos.", style: "V" }, { text: "Cantar, escuchar música o quedarme charlando con mis amigos.", style: "A" }, { text: "Correr, jugar a la pelota, saltar o trepar juegos.", style: "K" } ] },
-    { question: "2. Si la maestra está contando un cuento nuevo, te gusta más cuando:", options: [ { text: "Muestra las imágenes del libro en grande.", style: "V" }, { text: "Hace voces diferentes para cada personaje.", style: "A" }, { text: "Pide que nos levantemos y actuemos la historia con el cuerpo.", style: "K" } ] },
-    { question: "3. ¿Cuál es tu juguete o pasatiempo favorito?", options: [ { text: "Los rompecabezas, los bloques de colores o los libros para pintar.", style: "V" }, { text: "Los instrumentos musicales, micrófonos o juguetes que hacen sonidos.", style: "A" }, { text: "La plastilina, los legos, las pelotas o andar en bici.", style: "K" } ] },
-    { question: "4. Cuando tienes que estudiar o aprender algo nuevo para la escuela, tú prefieres:", options: [ { text: "Mirar los dibujos y usar marcadores de muchos colores.", style: "V" }, { text: "Que alguien me lo lea en voz alta o repetirlo yo hablando.", style: "A" }, { text: "Hacer algún experimento, tocar las cosas o caminar mientras aprendo.", style: "K" } ] },
-    { question: "5. Cuando estás muy feliz y contento, ¿cómo se lo demuestras a tus papás?", options: [ { text: "Les hago un dibujo muy bonito o una carta decorada.", style: "V" }, { text: "Se los digo fuerte, cantando o gritando de emoción.", style: "A" }, { text: "Les doy muchos abrazos, saltos y besos.", style: "K" } ] },
-    { question: "6. Si quieres acordarte de algo importante (como llevar un juguete a la escuela), ¿qué haces?", options: [ { text: "Lo dejo en un lugar donde lo pueda ver apenas me despierte.", style: "V" }, { text: "Me lo repito a mí mismo muchas veces antes de dormir.", style: "A" }, { text: "Me lo meto en la mochila enseguida con mis propias manos.", style: "K" } ] },
-    { question: "7. ¿Qué materia o clase te parece más divertida?", options: [ { text: "Artes plásticas (dibujar, pintar, ver videos).", style: "V" }, { text: "Música (cantar, escuchar instrumentos).", style: "A" }, { text: "Educación Física (correr, jugar juegos).", style: "K" } ] },
-    { question: "8. Cuando compras o te regalan ropa nueva, ¿qué te importa más?", options: [ { text: "Que tenga mi color favorito o un dibujo bonito.", style: "V" }, { text: "Lo que dicen mis amigos o mis papás cuando me la ven puesta.", style: "A" }, { text: "Que sea súper cómoda para poder jugar y correr libremente.", style: "K" } ] },
-    { question: "9. Cuando tienes que seguir las reglas de un juego nuevo, tú prefieres:", options: [ { text: "Mirar primero cómo juegan los demás para entender.", style: "V" }, { text: "Que alguien me explique las reglas en voz alta antes de empezar.", style: "A" }, { text: "Empezar a jugar de una vez y aprender mientras juego.", style: "K" } ] },
-    { question: "10. ¿Qué te molesta más cuando estás intentando hacer tu tarea?", options: [ { text: "Que la mesa esté muy desordenada o la luz me dé en la cara.", style: "V" }, { text: "Que haya ruido, televisión prendida o gente hablando cerca.", style: "A" }, { text: "Tener que estar mucho tiempo sentado en la misma silla sin moverme.", style: "K" } ] }
-];
-
 // Estado global
-let currentUser = { name: "", group: "", gender: "", age: "" };
+let currentUser = { name: "", group: "", gender: "", age: "", country: "" };
 let currentQuestionIndex = 0;
 let currentQuestions = [];
+let answers = [];
+let currentMode = 'adults';
+let currentLang = 'es';
+
+// Constante en la nube para persistencia global
+const CLOUD_API_URL = "https://jsonblob.com/api/jsonBlob/019f56c1-ff28-78c0-96e4-7b245e1c6524";
+
+// --- i18n & API de Países ---
+document.getElementById('lang-select').addEventListener('change', (e) => {
+    setLanguage(e.target.value);
+});
+
+function setLanguage(lang) {
+    currentLang = lang;
+    const dict = window.i18n[lang].ui;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+            el.innerHTML = dict[key];
+        }
+    });
+    
+    // Si estamos en plena prueba, actualizar los textos de la pregunta actual
+    if (document.getElementById('question-screen').classList.contains('active')) {
+        currentQuestions = currentMode === 'kids' ? window.i18n[currentLang].questionsKids : window.i18n[currentLang].questionsAdults;
+        renderQuestion();
+    }
+}
+
+async function loadCountries() {
+    try {
+        const res = await fetch('https://restcountries.com/v3.1/all?fields=name,translations');
+        const data = await res.json();
+        const select = document.getElementById('user-country');
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.disabled = true;
+        defaultOpt.selected = true;
+        defaultOpt.setAttribute('data-i18n', 'selectCountryDef');
+        defaultOpt.innerText = window.i18n[currentLang].ui.selectCountryDef;
+        select.innerHTML = '';
+        select.appendChild(defaultOpt);
+        
+        data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+        
+        data.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.name.common;
+            // Para idiomas específicos, se podría usar c.translations, pero common es estándar
+            opt.innerText = c.name.common; 
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.error("Error cargando países", e);
+    }
+}
+
+// Inicializar idioma y países
+setLanguage('es');
+loadCountries();
 let answers = [];
 
 // Constante en la nube para persistencia global
@@ -84,13 +111,14 @@ document.getElementById('continue-btn').addEventListener('click', () => {
     const groupVal = document.getElementById('user-group').value.trim().toUpperCase();
     const genderVal = document.getElementById('user-gender').value;
     const ageVal = document.getElementById('user-age').value;
+    const countryVal = document.getElementById('user-country').value || "No especificado";
     const errorMsg = document.getElementById('group-error');
     
     // Regex: exactly 3 letters + 3 numbers
-    const regex = /^[A-Z]{3}[0-9]{3}$/;
+    const regex = /^[a-zA-Z]{3}[0-9]{3}$/;
     
     if (!nameVal || !groupVal || !genderVal || !ageVal) {
-        alert("Por favor ingresa todos los datos: nombre, grupo, género y edad.");
+        alert(currentLang === 'es' ? "Por favor completa todos los datos." : "Please fill out all fields.");
         return;
     }
     
@@ -101,9 +129,19 @@ document.getElementById('continue-btn').addEventListener('click', () => {
     
     errorMsg.classList.add('hidden');
     currentUser.name = nameVal;
-    currentUser.group = groupVal;
-    currentUser.gender = genderVal;
+    currentUser.group = groupVal.toUpperCase();
+    currentUser.gender = genderVal; // This string depends on the language! Let's standardize it.
+    // Estandarizar el género internamente en español:
+    if (genderVal.includes("Masculino") || genderVal.includes("Male") || genderVal.includes("男") || genderVal.includes("Мужской") || genderVal.includes("Kuimba'e")) {
+        currentUser.gender = "Masculino";
+    } else if (genderVal.includes("Femenino") || genderVal.includes("Female") || genderVal.includes("女") || genderVal.includes("Женский") || genderVal.includes("Kuña")) {
+        currentUser.gender = "Femenino";
+    } else {
+        currentUser.gender = "Otro";
+    }
+
     currentUser.age = parseInt(ageVal);
+    currentUser.country = countryVal;
     
     document.getElementById('display-name').innerText = nameVal;
     showScreen('start');
@@ -114,7 +152,8 @@ document.getElementById('start-kids-btn').addEventListener('click', () => startT
 document.getElementById('start-adults-btn').addEventListener('click', () => startTest('adults'));
 
 function startTest(mode) {
-    currentQuestions = mode === 'kids' ? questionsKids : questionsAdults;
+    currentMode = mode;
+    currentQuestions = mode === 'kids' ? window.i18n[currentLang].questionsKids : window.i18n[currentLang].questionsAdults;
     currentQuestionIndex = 0;
     answers = new Array(currentQuestions.length).fill(null);
     showScreen('question');
@@ -123,9 +162,9 @@ function startTest(mode) {
 
 function renderQuestion() {
     const question = currentQuestions[currentQuestionIndex];
-    document.getElementById('progress-text').innerText = `Pregunta ${currentQuestionIndex + 1} de ${currentQuestions.length}`;
+    document.getElementById('progress-text').innerText = `${currentQuestionIndex + 1} / ${currentQuestions.length}`;
     document.getElementById('progress-fill').style.width = `${((currentQuestionIndex) / currentQuestions.length) * 100}%`;
-    document.getElementById('question-title').innerText = question.question;
+    document.getElementById('question-title').innerText = question.q;
 
     const optContainer = document.getElementById('options-container');
     optContainer.innerHTML = '';
@@ -135,15 +174,15 @@ function renderQuestion() {
     question.options.forEach((opt) => {
         const div = document.createElement('div');
         div.className = 'option-card';
-        div.innerText = opt.text;
-        if (answers[currentQuestionIndex] === opt.style) div.classList.add('selected');
+        div.innerText = opt.t;
+        if (answers[currentQuestionIndex] === opt.s) div.classList.add('selected');
         
         div.addEventListener('click', (e) => {
             if (transitionTimeout) return; // Evitar doble clic
             
             optContainer.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
             e.target.classList.add('selected');
-            answers[currentQuestionIndex] = opt.style;
+            answers[currentQuestionIndex] = opt.s;
             
             transitionTimeout = setTimeout(() => {
                 transitionTimeout = null;
@@ -228,8 +267,8 @@ function calculateResults() {
         else if (dominantName === "Kinestésico") descEl.innerHTML = "<strong>Tu punto fuerte es el hacer.</strong> Tu cuerpo necesita involucrarse física y espacialmente.";
     }
 
-    // GUARDAR EN LOCALSTORAGE
-    saveResultToDB(currentUser.name, currentUser.group, currentUser.gender, currentUser.age, pV, pA, pK, dominants[0]);
+    // GUARDAR EN LOCAL Y NUBE
+    saveResultToDB(currentUser.name, currentUser.group, currentUser.gender, currentUser.age, currentUser.country, pV, pA, pK, dominants[0]);
 }
 
 document.getElementById('download-btn').addEventListener('click', () => {
@@ -247,6 +286,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('user-group').value = '';
     document.getElementById('user-gender').value = '';
     document.getElementById('user-age').value = '';
+    document.getElementById('user-country').value = '';
     showScreen('welcome');
 });
 
@@ -266,7 +306,7 @@ async function getDB() {
     }
 }
 
-async function saveResultToDB(name, group, gender, age, v, a, k, mainStyle) {
+async function saveResultToDB(name, group, gender, age, country, v, a, k, mainStyle) {
     let currentData = { results: [], comments: [] };
     try {
         const res = await fetch(CLOUD_API_URL);
@@ -282,6 +322,7 @@ async function saveResultToDB(name, group, gender, age, v, a, k, mainStyle) {
         group: group,
         gender: gender,
         age: age,
+        country: country,
         v: v, a: a, k: k,
         mainStyle: mainStyle
     });

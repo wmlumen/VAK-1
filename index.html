@@ -8,6 +8,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Language Selector -->
+    <div class="lang-selector">
+        <select id="lang-select">
+            <option value="es">🇪🇸 Español</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="pt">🇧🇷 Português</option>
+            <option value="zh">🇨🇳 中文 (Mandarin)</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="gn">🇵🇾 Avañe'ẽ (Guaraní)</option>
+        </select>
+    </div>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- HTML2Canvas -->
@@ -28,10 +39,12 @@
         <span></span>
     </div>
     
-    <nav class="tabs-nav" id="mobile-nav">
-        <button class="tab-btn active" data-tab="tab-test">📝 Realizar Test</button>
-        <button class="tab-btn" data-tab="tab-stats">📊 Estadísticas de Grupo</button>
-        <button class="tab-btn" data-tab="tab-comments">💬 Comentarios</button>
+    <nav id="mobile-nav">
+        <ul>
+            <li><button class="tab-btn active" data-tab="tab-test" data-i18n="tabTest">📝 Realizar Test</button></li>
+            <li><button class="tab-btn" data-tab="tab-stats" data-i18n="tabStats">📊 Estadísticas de Grupo</button></li>
+            <li><button class="tab-btn" data-tab="tab-comments" data-i18n="tabComments">💬 Comentarios</button></li>
+        </ul>
     </nav>
 
     <main class="app-container glass">
@@ -48,53 +61,50 @@
                     <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://wmlumen.github.io/VAK-1/" alt="QR" style="width: 70px; height: 70px; border-radius: 8px; background: white; padding: 3px; cursor: pointer; transition: all 0.3s ease;" onclick="this.classList.toggle('fullscreen-qr')">
                 </div>
 
-                <h1>Test VAK</h1>
-                <p class="description" style="text-align: center;">
+                <h1 data-i18n="appTitle">Test VAK</h1>
+                <p class="description" style="text-align: center;" data-i18n="appDesc">
                     Identifica tu estilo de aprendizaje predominante. <br>
                     Por favor, ingresa tus datos para comenzar.
                 </p>
                 
                 <div class="form-group">
-                    <label for="user-name">Tu Nombre:</label>
+                    <label for="user-name" data-i18n="labelName">Tu Nombre:</label>
                     <input type="text" id="user-name" placeholder="Ej. Ana Pérez">
                 </div>
                 <div class="form-group">
-                    <label for="user-group">Código de Grupo (3 Letras + 3 Números):</label>
+                    <label for="user-group" data-i18n="labelGroup">Código de Grupo (3 Letras + 3 Números):</label>
                     <input type="text" id="user-group" placeholder="Ej. MAT123" maxlength="6" style="text-transform: uppercase;">
                     <small id="group-error" class="error-msg hidden">Formato inválido. Debe ser 3 letras y 3 números.</small>
                 </div>
                 <div class="form-group">
-                    <label for="user-gender">Género:</label>
+                    <label for="user-gender" data-i18n="labelGender">Género:</label>
                     <select id="user-gender" class="glass-input">
-                        <option value="">-- Selecciona --</option>
-                        <option value="Masculino">Masculino</option>
-                        <option value="Femenino">Femenino</option>
-                        <option value="Otro">Otro</option>
+                        <option value="" disabled selected data-i18n="selectGenderDef">-- Selecciona --</option>
+                        <option value="Masculino" data-i18n="genderM">Masculino</option>
+                        <option value="Femenino" data-i18n="genderF">Femenino</option>
+                        <option value="Otro" data-i18n="genderO">Otro</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="user-age">Edad:</label>
+                    <label for="user-age" data-i18n="labelAge">Edad:</label>
                     <input type="number" id="user-age" placeholder="Ej. 15" min="6" max="99" class="glass-input">
                 </div>
-                <button id="continue-btn" class="btn primary-btn" style="margin-top: 15px;">Continuar</button>
+                <div class="form-group">
+                    <label for="user-country" data-i18n="labelCountry">País:</label>
+                    <select id="user-country" class="glass-input">
+                        <option value="" disabled selected data-i18n="selectCountryDef">Cargando países...</option>
+                    </select>
+                </div>
+                <button id="continue-btn" class="btn primary-btn" style="width: 100%; margin-top: 15px;" data-i18n="btnContinue">Continuar</button>
             </section>
 
             <!-- Pantalla 2: Selección de Edad -->
             <section id="start-screen" class="screen hidden">
-                <h2>¡Hola, <span id="display-name"></span>!</h2>
-                <p class="description" style="text-align: center;">
-                    Elige el rango de edad para adaptar las preguntas:
-                </p>
-                <div class="mode-selection">
-                    <button id="start-kids-btn" class="btn primary-btn mode-btn">
-                        <span class="emoji">🧒</span>
-                        Test para Niños<br><small>(6 a 12 años)</small>
-                    </button>
-                    <button id="start-adults-btn" class="btn primary-btn mode-btn">
-                        <span class="emoji">🧑‍🎓</span>
-                        Jóvenes y Adultos<br><small>(13+ años)</small>
-                    </button>
-                </div>
+                <h2>Hola, <span id="display-name" style="color: var(--accent);"></span> 👋</h2>
+                <h3 data-i18n="startTitle">Selecciona tu rango de edad</h3>
+                <p class="description" data-i18n="startDesc">El cuestionario se adaptará para mostrar preguntas más relevantes a tu día a día.</p>
+                <button id="start-kids-btn" class="btn btn-secondary" data-i18n="btnKids">👶 Niños (6 a 12 años)</button>
+                <button id="start-adults-btn" class="btn btn-secondary" style="margin-top: 15px;" data-i18n="btnAdults">🧑 Jóvenes y Adultos (13+ años)</button>
             </section>
 
             <!-- Pantalla 3: Preguntas -->
@@ -110,7 +120,7 @@
                     <div id="options-container" class="options-container"></div>
                 </div>
                 <div class="navigation-buttons">
-                    <button id="prev-btn" class="btn secondary-btn hidden">Anterior</button>
+                    <button id="prev-btn" class="btn btn-secondary hidden" style="margin-top: 20px; width: 100%;" data-i18n="btnBack">Volver</button>
                 </div>
             </section>
 
@@ -131,9 +141,9 @@
                     <div id="result-description" class="result-description"></div>
                 </div>
                 
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                    <button id="download-btn" class="btn primary-btn" style="background: #10b981;">Descargar Resultado</button>
-                    <button id="restart-btn" class="btn secondary-btn">Cerrar y Volver</button>
+                <div style="display: flex; gap: 10px; flex-direction: column; justify-content: center;">
+                    <button id="download-btn" class="btn" style="width: 100%; margin-top: 20px;" data-i18n="btnDownload">📥 Descargar Resultado</button>
+                    <button id="restart-btn" class="btn btn-secondary" style="width: 100%; margin-top: 15px;" data-i18n="btnRestart">🔄 Cerrar y Volver al Inicio</button>
                 </div>
             </section>
         </div>
@@ -231,6 +241,7 @@
         </p>
     </footer>
 
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
