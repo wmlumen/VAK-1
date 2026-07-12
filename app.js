@@ -188,7 +188,7 @@ async function loadCountries() {
 
 // Inicializar idioma y países
 // Inicializar idioma
-setLanguage('es');
+changeLang('es');
 
 
 // --- LÓGICA DEL GENERADOR DE ENLACES (DOCENTES) ---
