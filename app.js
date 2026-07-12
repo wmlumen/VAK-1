@@ -62,11 +62,6 @@ async function loadCountries() {
 // Inicializar idioma y países
 setLanguage('es');
 loadCountries();
-let answers = [];
-
-// Constante en la nube para persistencia global
-const CLOUD_API_URL = "https://jsonblob.com/api/jsonBlob/019f56c1-ff28-78c0-96e4-7b245e1c6524";
-
 // --- HAMBURGER MENU ---
 document.getElementById('hamburger-btn').addEventListener('click', () => {
     document.getElementById('mobile-nav').classList.toggle('open');
