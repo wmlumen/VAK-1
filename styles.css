@@ -237,3 +237,17 @@ canvas { max-width: 100%; }
 .app-credits a:hover {
     text-decoration: underline;
 }
+
+/* QR Fullscreen */
+.fullscreen-qr {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 10000 !important;
+    width: 350px !important;
+    height: 350px !important;
+    max-width: 90vw !important;
+    max-height: 90vw !important;
+    box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.9) !important;
+}
