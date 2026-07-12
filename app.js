@@ -9,7 +9,7 @@ let currentLang = 'es';
 // Constante en la nube para persistencia global
 const CLOUD_API_URL = "https://jsonblob.com/api/jsonBlob/019f56c1-ff28-78c0-96e4-7b245e1c6524";
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Detectar idioma
     let langToSet = localStorage.getItem('vak_lang');
     if (!langToSet) {
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     changeLang(langToSet);
-    loadCountries();
+    await loadCountries();
     initWizard();
 });
 
@@ -34,10 +34,15 @@ window.switchTab = function(tabId) {
             btn.classList.remove('active');
         }
     });
-    document.getElementById(tabId).classList.add('active');
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) targetTab.classList.add('active');
+    
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('active');
     }
+
+    if (tabId === 'tab-stats' && typeof loadStats === 'function') loadStats();
+    if (tabId === 'tab-comments' && typeof loadComments === 'function') loadComments();
 };
 
 // Dropdown Logic
@@ -182,54 +187,9 @@ async function loadCountries() {
 }
 
 // Inicializar idioma y países
+// Inicializar idioma
 setLanguage('es');
-loadCountries().then(() => {
-    // Procesar parámetros URL si existen (Docente Link)
-    const params = new URLSearchParams(window.location.search);
-    const urlGroup = params.get('group');
-    const urlCountry = params.get('country');
-    
-    if (urlGroup) {
-        document.getElementById('user-group').value = urlGroup;
-        document.getElementById('group-container').classList.add('hidden'); // Acortar formulario
-    }
-    if (urlCountry) {
-        // Encontrar opción
-        let found = false;
-        const select = document.getElementById('user-country');
-        for (let i = 0; i < select.options.length; i++) {
-            if (select.options[i].value === urlCountry || select.options[i].value.includes(urlCountry)) {
-                select.selectedIndex = i;
-                found = true; break;
-            }
-        }
-        if (!found) {
-            const opt = document.createElement('option');
-            opt.value = urlCountry; opt.innerText = urlCountry;
-            select.appendChild(opt);
-            select.selectedIndex = select.options.length - 1;
-        }
-        document.getElementById('country-container').classList.add('hidden'); // Acortar formulario
-    }
-});
-// --- NAVEGACIÓN TABS ---
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        document.getElementById('mobile-nav').classList.remove('open');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        btn.classList.add('active');
-        const tabId = btn.getAttribute('data-tab');
-        const targetTab = document.getElementById(tabId);
-        targetTab.classList.remove('hidden');
-        targetTab.classList.add('active');
 
-        if (tabId === 'tab-stats') loadStats();
-        if (tabId === 'tab-comments') loadComments();
-    });
-});
 
 // --- LÓGICA DEL GENERADOR DE ENLACES (DOCENTES) ---
 document.getElementById('generate-link-btn').addEventListener('click', async () => {
